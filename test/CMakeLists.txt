@@ -1,0 +1,24 @@
+enable_testing()
+
+find_package(Catch2 REQUIRED)
+find_package(RBDyn REQUIRED)
+
+macro(addTest testName)
+    add_executable(${testName} ${testName}.cpp)
+    target_compile_definitions(${testName} PRIVATE CATCH_CONFIG_MAIN _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS COMA_THROW_ON_ASSERT_FAIL)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(${testName} PUBLIC /bigobj /W4)
+    else()
+        target_compile_options(${testName} PUBLIC -Wno-sign-conversion -Wno-string-plus-int -Wno-nonportable-include-path)
+    endif()
+    target_link_libraries(${testName} PUBLIC ${PROJECT_NAME} Catch2::Catch2 Eigen3::Eigen RBDyn::RBDyn)
+    # Adding a project configuration file (for MSVC only)
+    generate_msvc_dot_user_file(${testName})
+
+    add_test(${testName}Unit ${testName})
+endmacro(addTest)
+
+addTest(model_test)
+# addTest(forward_kinematics_test)
+# addTest(inverse_dynamics_test)
+# addTest(forward_dynamics_test)
