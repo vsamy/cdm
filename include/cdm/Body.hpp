@@ -1,11 +1,11 @@
 #pragma once
 
-#include "cod/API.hpp"
-#include "cod/typedefs.hpp"
+#include "cdm/API.hpp"
+#include "cdm/typedefs.hpp"
 
-namespace cod {
+namespace cdm {
 
-class COD_DLLAPI Body {
+class CDM_DLLAPI Body {
 public:
     Body() = default;
     Body(const std::string& name, const Inertia& spatialInertia);
@@ -22,4 +22,4 @@ private:
     Inertia m_inertia;
 };
 
-} // namespace cod
+} // namespace cdm

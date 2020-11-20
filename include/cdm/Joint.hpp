@@ -1,11 +1,11 @@
 #pragma once
 
-#include "cod/API.hpp"
-#include "cod/typedefs.hpp"
+#include "cdm/API.hpp"
+#include "cdm/typedefs.hpp"
 
-namespace cod {
+namespace cdm {
 
-class COD_DLLAPI Joint {
+class CDM_DLLAPI Joint {
 public:
     enum class Type {
         Free,
@@ -39,4 +39,4 @@ private:
     int m_dof;
 };
 
-} // namespace cod
+} // namespace cdm

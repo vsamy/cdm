@@ -1,13 +1,10 @@
 #pragma once
 
-#include "cod/API.hpp"
-#include "cod/Model.hpp"
-#include <unordered_map>
-#include <vector>
+#include "cdm/Model.hpp"
 
-namespace cod {
+namespace cdm {
 
-class COD_DLLAPI ModelConstructor {
+class CDM_DLLAPI ModelConstructor {
 public:
     ModelConstructor() = default;
 
@@ -32,4 +29,4 @@ private:
     std::unordered_map<std::string, int> m_bodyIndexFromName;
 };
 
-} // namespace cod
+} // namespace cdm

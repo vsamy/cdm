@@ -2,26 +2,33 @@
 #include "macros.hpp"
 #include "model_generation.hpp"
 #include <catch2/catch.hpp>
-#include <cod/FK.hpp>
-#include <cod/ID.hpp>
+#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
 #include <rbdyn/ID.h>
 #include <tuple>
 
-TEST_CASE("ID", "[ID]")
+struct FixedOrder {
+    static constexpr int order = 5;
+};
+
+struct DynamicOrder {
+    static constexpr int order = coma::Dynamic;
+};
+
+TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
 {
-    constexpr int order = 5;
+    constexpr int order = TestType::order;
 
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;
     rbd::MultiBodyGraph mbg;
     std::tie(mb, mbc, mbg) = rbd::makeHumanBody();
 
-    cod::Model model = cod::makeHumanBody();
-    cod::ModelConfig mc1;
-    cod::ModelConfig mc2;
+    cdm::Model model = cdm::makeHumanBody();
+    cdm::ModelConfig<order> mc1;
+    cdm::ModelConfig<order> mc2;
 
     int nt = 21;
     double dt = 1e-8;

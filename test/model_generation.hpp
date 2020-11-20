@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cod/Model.hpp>
-#include <cod/ModelConfig.hpp>
+#include <cdm/Core>
 #include <rbdyn/EulerIntegration.h>
 #include <rbdyn/MultiBody.h>
 #include <rbdyn/MultiBodyConfig.h>
@@ -37,7 +36,7 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     data.nt = nt;
     data.dt = dt;
     data.time = Eigen::VectorXd::LinSpaced(nt, 0., (nt - 1) * dt);
-    data.gravity = Eigen::Vector3d(0, 0, 9.81);
+    // data.gravity = Eigen::Vector3d(0, 0, 9.81); // TODO: Make test with gravity
     data.gravity.setZero();
     data.q.resize(nt, Eigen::VectorXd(mb.nrParams()));
     data.dqs.resize(nt);
@@ -71,12 +70,12 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     mbc.q = rbd::vectorToParam(mb, data.q[0]);
     mbc.alpha = rbd::vectorToDof(mb, data.dqs[0].col(0));
     mbc.alphaD = rbd::vectorToDof(mb, data.dqs[0].col(1));
-    mbc.gravity = data.gravity;
     return data;
 }
 
 void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc)
 {
+    mbc.gravity = data.gravity;
     for (int j = 0; j < mb.nrJoints(); ++j) {
         mbc.q = rbd::vectorToParam(mb, data.q[data.curData]);
         mbc.alpha = rbd::vectorToDof(mb, data.dqs[data.curData].col(0));
@@ -84,28 +83,28 @@ void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyCo
     }
 }
 
-void Init(const TrajectoryData& data, const cod::Model& m, cod::ModelConfig& mc)
+template <int Order>
+void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Order>& mc)
 {
-    mc.order = data.order;
-    mc.bodyMotions.resize(m.nLinks(), cod::CMTM(data.order));
-    mc.jointMotions.resize(m.nLinks(), cod::CMTM(data.order));
-    mc.jointMomentums.resize(m.nLinks(), cod::ForceVectorX(data.order));
-    mc.jointForces.resize(m.nLinks(), cod::ForceVectorX(data.order));
-    mc.bodyMomentums.resize(m.nLinks(), cod::ForceVectorX(data.order));
-    mc.bodyForces.resize(m.nLinks(), cod::ForceVectorX(data.order));
-    mc.jointTorques.resize(m.nLinks());
+    mc.bodyMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
+    mc.jointMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
+    mc.jointMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.jointForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.bodyMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.bodyForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.jointTorques.resize(m.nLinks(), Eigen::VectorXd(m.nDof()));
     mc.q = data.q[data.curData];
     mc.dqs = data.dqs[data.curData];
 
     for (int i = 0; i < m.nLinks(); ++i) {
         int p = m.jointPosInParam(i);
-        cod::Transform dA;
+        cdm::Transform dA;
         switch (m.joint(i).type()) {
-        case cod::Joint::Type::Free: {
+        case cdm::Joint::Type::Free: {
             dA.translation() = mc.q.template segment<3>(p + 4);
             [[fallthrough]];
         }
-        case cod::Joint::Type::Spherical: {
+        case cdm::Joint::Type::Spherical: {
             dA.rotation() = Eigen::Quaterniond{ mc.q(p), mc.q(p + 1), mc.q(p + 2), mc.q(p + 3) }.toRotationMatrix();
             break;
         }
@@ -122,7 +121,7 @@ void Init(const TrajectoryData& data, const cod::Model& m, cod::ModelConfig& mc)
         jm.construct();
     }
 
-    auto v = cod::MotionVectorX::Zero(data.order);
-    v[1] = cod::MotionVector(Eigen::Vector3d::Zero(), data.gravity);
-    mc.world.set(cod::Transform::Identity(), v);
+    auto v = cdm::MotionVectorX<Order>::Zero(data.order);
+    v[1] = cdm::MotionVector(Eigen::Vector3d::Zero(), data.gravity);
+    mc.world.set(cdm::Transform::Identity(), v);
 }

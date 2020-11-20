@@ -2,7 +2,7 @@
 #include "macros.hpp"
 #include "model_generation.hpp"
 #include <catch2/catch.hpp>
-#include <cod/FD.hpp>
+#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FD.h>
 #include <rbdyn/FK.h>

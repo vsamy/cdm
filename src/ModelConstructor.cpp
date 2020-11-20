@@ -1,6 +1,6 @@
-#include "cod/ModelConstructor.hpp"
+#include "cdm/ModelConstructor.hpp"
 
-namespace cod {
+namespace cdm {
 
 void ModelConstructor::addLink(const Joint& joint, const Body& body)
 {
@@ -12,8 +12,8 @@ void ModelConstructor::addLink(const Joint& joint, const Body& body)
 
 void ModelConstructor::link(const std::string& bodyName, const std::string& nextJointName, const Transform& A_b_j)
 {
-    assert(m_bodyIndexFromName.find(bodyName) != m_bodyIndexFromName.end() && (bodyName + " is unknown").c_str());
-    assert(m_jointIndexFromName.find(nextJointName) != m_jointIndexFromName.end() && (nextJointName + " is unknown").c_str());
+    assert(m_bodyIndexFromName.find(bodyName) != m_bodyIndexFromName.end() && "bodyName is unknown");
+    assert(m_jointIndexFromName.find(nextJointName) != m_jointIndexFromName.end() && "nextJointName is unknown");
     int bInd = m_bodyIndexFromName[bodyName];
     int jInd = m_jointIndexFromName[nextJointName];
 
@@ -24,7 +24,7 @@ void ModelConstructor::link(const std::string& bodyName, const std::string& next
 
 Model ModelConstructor::build(const std::string& rootName, const Transform& A_world_root) const
 {
-    assert(m_jointIndexFromName.find(rootName) != m_jointIndexFromName.end() && (rootName + " is unknown").c_str());
+    assert(m_jointIndexFromName.find(rootName) != m_jointIndexFromName.end() && "rootName is unknown");
     // TODO: warn if root is not first joint
     std::vector<Joint> joints;
     std::vector<Body> bodies;
@@ -59,4 +59,4 @@ Model ModelConstructor::build(const std::string& rootName, const Transform& A_wo
     return { std::move(joints), std::move(bodies), std::move(jointParents), std::move(jointChilds), std::move(A0) };
 }
 
-} // namespace cod
+} // namespace cdm

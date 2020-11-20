@@ -1,8 +1,9 @@
-#include "cod/FK.hpp"
+#pragma once
 
-namespace cod {
+namespace cdm {
 
-void FK(const Model& m, ModelConfig& mc)
+template <int Order>
+void FK(const Model& m, ModelConfig<Order>& mc)
 {
     const auto& parents = m.jointParents();
     const auto& childs = m.jointChilds();
@@ -14,4 +15,4 @@ void FK(const Model& m, ModelConfig& mc)
     }
 }
 
-} // namespace cod
+} // namespace cdm

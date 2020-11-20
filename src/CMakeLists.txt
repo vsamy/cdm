@@ -1,17 +1,14 @@
 
 set(SRC 
     Body.cpp
-    # FD.cpp
-    FK.cpp
-    ID.cpp
     Joint.cpp
     Model.cpp
-    ModelConfig.cpp
     ModelConstructor.cpp
 )
 
 set(HEADERS 
-    ${PROJECT_NAME}/api.hpp
+    ${PROJECT_NAME}/Core
+    ${PROJECT_NAME}/API.hpp
     ${PROJECT_NAME}/Body.hpp
     # ${PROJECT_NAME}/FD.hpp
     ${PROJECT_NAME}/FK.hpp
@@ -28,10 +25,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURR
 target_link_libraries(${PROJECT_NAME} PUBLIC coma::coma)
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR} VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DCOD_EXPORTS")
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DCDM_EXPORTS")
 
 install(
-    TARGETS cod
+    TARGETS cdm
     EXPORT "${TARGETS_EXPORT_NAME}"
     LIBRARY DESTINATION "lib"
     ARCHIVE DESTINATION "lib"

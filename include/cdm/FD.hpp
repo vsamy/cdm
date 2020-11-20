@@ -1,21 +1,22 @@
-#include "cod/FD.hpp"
+#pragma once
 
-namespace cod {
+namespace cdm {
 
-Eigen::VectorXd FD(const Model& m, const ModelConfig& mc, const std::vector<Eigen::VectorXd>& Tau)
+template <int Order>
+Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& Tau)
 {
     const auto& parents = m.jointParents();
 
-    std::vector<CMTM> C(m.nLinks());
-    std::vector<DiMotionSubspace> G(m.nLinks());
-    std::vector<ForceVectorX> PA(m.nLinks());
-    std::vector<BTM66> IA(m.nLinks());
-    std::vector<DBX> U(m.nLinks());
-    std::vector<DBX> UD(m.nLinks());
-    std::vector<DBX> D(m.nLinks());
-    std::vector<DBX> DInv(m.nLinks());
+    std::vector<CMTM<Order>> C(m.nLinks());
+    std::vector<DiMotionSubspace<Order>> G(m.nLinks());
+    std::vector<ForceVectorX<Order>> PA(m.nLinks());
+    std::vector<BTM66<Order>> IA(m.nLinks());
+    std::vector<DBX<Order>> U(m.nLinks());
+    std::vector<DBX<Order>> UD(m.nLinks());
+    std::vector<DBX<Order>> D(m.nLinks());
+    std::vector<DBX<Order>> DInv(m.nLinks());
     Eigen::VectorXd y(m.nDof());
-    std::vector<MotionVectorX> T(m.nLinks());
+    std::vector<MotionVectorX<Order>> T(m.nLinks());
 
     for (int i = 0; i < m.nLinks(); ++i) {
         G[i] = DiMotionSubspace{ mb.joint(i).S() };
@@ -54,8 +55,8 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig& mc, const std::vector<Eige
     return y;
 }
 
-// template <typename Scalar, int Space, int Order>
-// void standardFD(const Model<Scalar>& m, ModelConfig<Scalar, Space, Order>& mc)
+// template <int Order>
+// Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& Tau)
 // {
 //     constexpr int ord = Tree::order;
 //     const auto& mb = info.model.mb;
@@ -107,4 +108,4 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig& mc, const std::vector<Eige
 //     return y;
 // }
 
-} // namespace cod
+} // namespace cdm

@@ -1,6 +1,6 @@
-#include "cod/Model.hpp"
+#include "cdm/Model.hpp"
 
-namespace cod {
+namespace cdm {
 
 Model::Model(std::vector<Joint> joints, std::vector<Body> bodies, std::vector<int> jointParents,
     std::vector<int> jointChilds, std::vector<Transform> A0)
@@ -125,4 +125,4 @@ const std::vector<Transform>& Model::A0s() const noexcept
     return m_A0;
 }
 
-} // namespace cod
+} // namespace cdm

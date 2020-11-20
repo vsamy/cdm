@@ -2,24 +2,32 @@
 #include "macros.hpp"
 #include "model_generation.hpp"
 #include <catch2/catch.hpp>
-#include <cod/FK.hpp>
+#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
 #include <tuple>
 
-TEST_CASE("FK", "[FK]")
+struct FixedOrder {
+    static constexpr int order = 5;
+};
+
+struct DynamicOrder {
+    static constexpr int order = coma::Dynamic;
+};
+
+TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
 {
-    constexpr int order = 5;
+    constexpr int order = TestType::order;
 
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;
     rbd::MultiBodyGraph mbg;
     std::tie(mb, mbc, mbg) = rbd::makeHumanBody();
 
-    cod::Model model = cod::makeHumanBody();
-    cod::ModelConfig mc1;
-    cod::ModelConfig mc2;
+    cdm::Model model = cdm::makeHumanBody();
+    cdm::ModelConfig<order> mc1;
+    cdm::ModelConfig<order> mc2;
 
     int nt = 21;
     double dt = 1e-8;
@@ -67,7 +75,7 @@ TEST_CASE("FK", "[FK]")
         auto m2 = (linkWorldInv * mc2.bodyMotions[i]).motion();
         auto dV = (m2 - m1) / dt;
         for (int n = 0; n < order - 1; ++n) {
-            REQUIRE((dV[n] - m2[n + 1]).vector().norm() < dt * 100.);
+            REQUIRE((dV[n] - m2[n + 1]).vector().norm() < dt * 1000.);
         }
     }
 }

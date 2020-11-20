@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.8.2) # For c++17
 set(CMAKE_CXX_STANDARD 17)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(PROJECT_NAME cod)
-set(PROJECT_DESCRIPTION "JRL cod (Comprehensive Dynamics) based on coma library")
+set(PROJECT_NAME cdm)
+set(PROJECT_DESCRIPTION "JRL cdm (Comprehensive Dynamics Model) based on coma library")
 set(PROJECT_URL "...")
 set(PROJECT_VERSION 0.1.0)
 set(PROJECT_USE_CMAKE_EXPORT TRUE)
@@ -27,6 +27,8 @@ endif()
 find_package(Eigen3 REQUIRED)
 find_package(coma REQUIRED)
 
+set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 add_subdirectory(src)
 
 if (${BUILD_TESTING})

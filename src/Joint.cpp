@@ -1,6 +1,6 @@
-#include "cod/Joint.hpp"
+#include "cdm/Joint.hpp"
 
-namespace cod {
+namespace cdm {
 
 Joint::Joint(const std::string& name, Type type, const Eigen::Vector3d& axis)
     : m_name(name)
@@ -66,4 +66,4 @@ void Joint::makeJoint(Type type, const Eigen::Vector3d& axis)
     }
 }
 
-} // namespace cod
+} // namespace cdm

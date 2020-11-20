@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cod/ModelConstructor.hpp"
+#include <cdm/Core>
 
 // includes
 // std
@@ -128,7 +128,7 @@ std::tuple<MultiBody, MultiBodyConfig, MultiBodyGraph> makeHumanBody()
 
 } // namespace rbd
 
-namespace cod {
+namespace cdm {
 
 void createLeg(ModelConstructor& mc,
     const Eigen::Vector3d& direction,
@@ -212,4 +212,4 @@ Model makeHumanBody()
     return mc.build("Root");
 }
 
-} // namespace cod
+} // namespace cdm

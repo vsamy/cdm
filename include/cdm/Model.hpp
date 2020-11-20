@@ -1,14 +1,11 @@
 #pragma once
 
-#include "cod/API.hpp"
-#include "cod/Body.hpp"
-#include "cod/Joint.hpp"
-#include <unordered_map>
-#include <vector>
+#include "cdm/Body.hpp"
+#include "cdm/Joint.hpp"
 
-namespace cod {
+namespace cdm {
 
-class COD_DLLAPI Model {
+class CDM_DLLAPI Model {
 public:
     Model() = default;
     Model(std::vector<Joint> joints, std::vector<Body> bodies, std::vector<int> jointParents,
@@ -53,4 +50,4 @@ private:
     std::unordered_map<std::string, int> m_bodyIndexByName;
 };
 
-} // namespace cod
+} // namespace cdm

@@ -1,6 +1,6 @@
-#include "cod/Body.hpp"
+#include "cdm/Body.hpp"
 
-namespace cod {
+namespace cdm {
 
 Body::Body(const std::string& name, const Inertia& spatialInertia)
     : m_name(name)
@@ -22,4 +22,4 @@ const Inertia& Body::inertia() const noexcept
     return m_inertia;
 }
 
-} // namespace cod
+} // namespace cdm
