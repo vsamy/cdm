@@ -36,8 +36,7 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     data.nt = nt;
     data.dt = dt;
     data.time = Eigen::VectorXd::LinSpaced(nt, 0., (nt - 1) * dt);
-    // data.gravity = Eigen::Vector3d(0, 0, 9.81); // TODO: Make test with gravity
-    data.gravity.setZero();
+    data.gravity = Eigen::Vector3d(0, 0, 9.81);
     data.q.resize(nt, Eigen::VectorXd(mb.nrParams()));
     data.dqs.resize(nt);
     std::fill(data.dqs.begin(), data.dqs.end(), Eigen::MatrixXd(mb.nrDof(), order));

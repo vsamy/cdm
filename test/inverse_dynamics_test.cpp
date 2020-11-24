@@ -17,24 +17,26 @@ struct DynamicOrder {
     static constexpr int order = coma::Dynamic;
 };
 
-TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
+template <int Order>
+void test_id(bool withGravity)
 {
-    constexpr int order = TestType::order;
-
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;
     rbd::MultiBodyGraph mbg;
     std::tie(mb, mbc, mbg) = rbd::makeHumanBody();
 
     cdm::Model model = cdm::makeHumanBody();
-    cdm::ModelConfig<order> mc1;
-    cdm::ModelConfig<order> mc2;
+    cdm::ModelConfig<Order> mc1;
+    cdm::ModelConfig<Order> mc2;
 
     cdm::Index nt = 21;
     double dt = 1e-8;
     cdm::Index t1 = nt / 2;
     cdm::Index t2 = t1 + 1;
-    auto data = GenerateData<order>(mb, mbc, nt, dt);
+    auto data = GenerateData<Order>(mb, mbc, nt, dt);
+    if (!withGravity) {
+        data.gravity.setZero();
+    }
     data.setCurData(t1);
 
     // First ID used for numerical comparison
@@ -85,16 +87,21 @@ TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
         auto dlF = (mc2.bodyForces[i] - mc1.bodyForces[i]) / dt;
         auto djP = (mc2.jointMomentums[i] - mc1.jointMomentums[i]) / dt;
         auto djF = (mc2.jointForces[i] - mc1.jointForces[i]) / dt;
-        for (cdm::Index n = 0; n < order - 1; ++n) {
-            REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
-            REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
+        for (cdm::Index n = 0; n < Order - 1; ++n) {
+            if (!withGravity) {
+                REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
+                REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
+            }
             if (n != 0) {
                 REQUIRE((dlF[n] - mc2.bodyForces[i][n + 1]).vector().norm() < dt * 1000.);
                 REQUIRE((djF[n] - mc2.jointForces[i][n + 1]).vector().norm() < dt * 1000.);
-            } else {
-                REQUIRE((dlF[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
-                REQUIRE((djF[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
             }
         }
     }
+}
+
+TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
+{
+    test_id<TestType::order>(false);
+    test_id<TestType::order>(true);
 }
