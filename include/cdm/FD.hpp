@@ -18,13 +18,13 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vect
     Eigen::VectorXd y(m.nDof());
     std::vector<MotionVectorX<Order>> T(m.nLinks());
 
-    for (int i = 0; i < m.nLinks(); ++i) {
+    for (Index i = 0; i < m.nLinks(); ++i) {
         G[i] = DiMotionSubspace{ mb.joint(i).S() };
         IA[i].setZero(Order);
         PA[i].setZero(Order);
     }
 
-    for (int i = m.nLinks() - 1; i >= 0; --i) {
+    for (Index i = m.nLinks() - 1; i >= 0; --i) {
         IA[i] += DiInertia(mb.body(i).inertia());
         U[i] = IA[i] * G[i];
         auto GT = G[i].transpose();
@@ -41,8 +41,8 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vect
         }
     }
 
-    for (int i = 0; i < m.nLinks(); ++i) {
-        int dof = m.joint(i).dof();
+    for (Index i = 0; i < m.nLinks(); ++i) {
+        Index dof = m.joint(i).dof();
         if (parents[i] != -1) {
             y[i] -= DInv[i] * UD[i] * (mc.jointMotions[i] * T[parents[i]]);
         }
@@ -72,15 +72,15 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vect
 //     std::vector<Eigen::MatrixXd> D(mb.nrBodies());
 //     Eigen::VectorXd y(tau.size());
 
-//     for (int i = 0; i < mb.nrBodies(); ++i) {
+//     for (Index i = 0; i < mb.nrBodies(); ++i) {
 //         IA[i].setZero();
 //         PA[i].setZero();
 //         X[i] = tree.joints[i].transform().inverse().matrix();
 //     }
 
-//     for (int i = mb.nrBodies() - 1; i >= 0; --i) {
+//     for (Index i = mb.nrBodies() - 1; i >= 0; --i) {
 //         const auto& S = mb.joint(i).motionSubspace();
-//         int dof = mb.joint(i).dof();
+//         Index dof = mb.joint(i).dof();
 //         IA[i] += mb.body(i).inertia().matrix();
 //         U[i] = IA[i] * S;
 //         D[i] = S.transpose() * U[i];
@@ -94,8 +94,8 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vect
 //         }
 //     }
 
-//     for (int i = 0; i < mb.nrJoints(); ++i) {
-//         int dof = mb.joint(i).dof();
+//     for (Index i = 0; i < mb.nrJoints(); ++i) {
+//         Index dof = mb.joint(i).dof();
 //         if (pred[i] != -1) {
 //             y.segment(jpd[i], dof) -= D[i].inverse() * U[i].transpose() * X[i] * T[pred[i]];
 //         }

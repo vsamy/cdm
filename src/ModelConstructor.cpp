@@ -4,8 +4,8 @@ namespace cdm {
 
 void ModelConstructor::addLink(const Joint& joint, const Body& body)
 {
-    m_jointIndexFromName[joint.name()] = static_cast<int>(m_jointBases.size());
-    m_bodyIndexFromName[body.name()] = static_cast<int>(m_bodyBases.size());
+    m_jointIndexFromName[joint.name()] = static_cast<Index>(m_jointBases.size());
+    m_bodyIndexFromName[body.name()] = static_cast<Index>(m_bodyBases.size());
     m_jointBases.push_back(JointBase{ joint, -1 });
     m_bodyBases.push_back(BodyBase{ body, {} });
 }
@@ -14,8 +14,8 @@ void ModelConstructor::link(const std::string& bodyName, const std::string& next
 {
     assert(m_bodyIndexFromName.find(bodyName) != m_bodyIndexFromName.end() && "bodyName is unknown");
     assert(m_jointIndexFromName.find(nextJointName) != m_jointIndexFromName.end() && "nextJointName is unknown");
-    int bInd = m_bodyIndexFromName[bodyName];
-    int jInd = m_jointIndexFromName[nextJointName];
+    Index bInd = m_bodyIndexFromName[bodyName];
+    Index jInd = m_jointIndexFromName[nextJointName];
 
     m_bodyBases[bInd].next.emplace_back(jInd, A_b_j);
     m_jointBases[jInd].previous = bInd;
@@ -28,22 +28,22 @@ Model ModelConstructor::build(const std::string& rootName, const Transform& A_wo
     // TODO: warn if root is not first joint
     std::vector<Joint> joints;
     std::vector<Body> bodies;
-    std::vector<int> jointParents;
-    std::vector<int> jointChilds;
+    std::vector<Index> jointParents;
+    std::vector<Index> jointChilds;
     std::vector<Transform> A0;
-    std::unordered_map<std::string, int> jointIndexByName;
-    std::unordered_map<std::string, int> bodyIndexByName;
+    std::unordered_map<std::string, Index> jointIndexByName;
+    std::unordered_map<std::string, Index> bodyIndexByName;
 
-    int curPos = 0;
-    int curInd = m_jointIndexFromName.at(rootName);
+    Index curPos = 0;
+    Index curInd = m_jointIndexFromName.at(rootName);
 
-    std::function<void(int, const Transform&)> addNext;
-    addNext = [&](int linkIndex, const Transform& A) {
+    std::function<void(Index, const Transform&)> addNext;
+    addNext = [&](Index linkIndex, const Transform& A) {
         const auto& jb = m_jointBases[linkIndex];
         const auto& bb = m_bodyBases[linkIndex];
         joints.push_back(jb.joint);
         bodies.push_back(bb.body);
-        int previousBody = jb.previous == -1 ? -1 : bodyIndexByName[m_bodyBases[jb.previous].body.name()];
+        Index previousBody = jb.previous == -1 ? -1 : bodyIndexByName[m_bodyBases[jb.previous].body.name()];
         jointParents.push_back(previousBody);
         jointChilds.push_back(curPos);
         A0.push_back(A);

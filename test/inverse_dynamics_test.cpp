@@ -30,10 +30,10 @@ TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
     cdm::ModelConfig<order> mc1;
     cdm::ModelConfig<order> mc2;
 
-    int nt = 21;
+    cdm::Index nt = 21;
     double dt = 1e-8;
-    int t1 = nt / 2;
-    int t2 = t1 + 1;
+    cdm::Index t1 = nt / 2;
+    cdm::Index t2 = t1 + 1;
     auto data = GenerateData<order>(mb, mbc, nt, dt);
     data.setCurData(t1);
 
@@ -80,12 +80,12 @@ TEMPLATE_TEST_CASE("ID", "[ID]", FixedOrder, DynamicOrder)
     // Numerical check
     // Please remember that here the 0-order force is the momentum and f[1] corresponds to the classical force so f[0] == p[0]
     // And we have df[0]/dt == dp[0]/dt == p[1], thus df[0]/dt != f[1] (the numerical derivative of f[0] is p[1] and not f[1])
-    for (int i = 0; i < mb.nrBodies(); ++i) {
+    for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
         auto dlP = (mc2.bodyMomentums[i] - mc1.bodyMomentums[i]) / dt;
         auto dlF = (mc2.bodyForces[i] - mc1.bodyForces[i]) / dt;
         auto djP = (mc2.jointMomentums[i] - mc1.jointMomentums[i]) / dt;
         auto djF = (mc2.jointForces[i] - mc1.jointForces[i]) / dt;
-        for (int n = 0; n < order - 1; ++n) {
+        for (cdm::Index n = 0; n < order - 1; ++n) {
             REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
             REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
             if (n != 0) {

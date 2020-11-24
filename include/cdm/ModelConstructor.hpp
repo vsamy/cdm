@@ -15,18 +15,18 @@ public:
 private:
     struct BodyBase {
         Body body;
-        std::vector<std::pair<int, Transform>> next;
+        std::vector<std::pair<Index, Transform>> next;
     };
     struct JointBase {
         Joint joint;
-        int previous;
+        Index previous;
     };
 
 private:
     std::vector<BodyBase> m_bodyBases;
     std::vector<JointBase> m_jointBases;
-    std::unordered_map<std::string, int> m_jointIndexFromName;
-    std::unordered_map<std::string, int> m_bodyIndexFromName;
+    std::unordered_map<std::string, Index> m_jointIndexFromName;
+    std::unordered_map<std::string, Index> m_bodyIndexFromName;
 };
 
 } // namespace cdm

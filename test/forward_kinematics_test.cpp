@@ -29,10 +29,10 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     cdm::ModelConfig<order> mc1;
     cdm::ModelConfig<order> mc2;
 
-    int nt = 21;
+    cdm::Index nt = 21;
     double dt = 1e-8;
-    int t1 = nt / 2;
-    int t2 = t1 + 1;
+    cdm::Index t1 = nt / 2;
+    cdm::Index t2 = t1 + 1;
     auto data = GenerateData<order>(mb, mbc, nt, dt);
     data.setCurData(t1);
 
@@ -47,7 +47,7 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     rbd::forwardAcceleration(mb, mbc);
 
     // Check joint motion first
-    for (int i = 0; i < mb.nrJoints(); ++i) {
+    for (cdm::Index i = 0; i < mb.nrJoints(); ++i) {
         REQUIRE(mbc.parentToSon[i].translation().isApprox(mc1.jointMotions[i].transform().translation()));
         REQUIRE(mbc.parentToSon[i].rotation().transpose().isApprox(mc1.jointMotions[i].transform().rotation()));
         REQUIRE(mbc.jointVelocity[i].vector() == mc1.jointMotions[i].motion()[0].vector());
@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     // Check FK with RBDyn
     auto linkWorldInv = mc1.world.inverse();
     double prec = coma::dummy_precision<double>();
-    for (int i = 0; i < mb.nrJoints(); ++i) {
+    for (cdm::Index i = 0; i < mb.nrJoints(); ++i) {
         auto linkMotions = (linkWorldInv * mc1.bodyMotions[i]).motion();
         REQUIRE((mbc.bodyPosW[i].translation() - mc1.bodyMotions[i].transform().translation()).norm() < prec);
         REQUIRE((mbc.bodyPosW[i].rotation().transpose() - mc1.bodyMotions[i].transform().rotation()).norm() < prec);
@@ -70,11 +70,11 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     FK(model, mc2);
 
     // Numerical check
-    for (int i = 0; i < mb.nrBodies(); ++i) {
+    for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
         auto m1 = (linkWorldInv * mc1.bodyMotions[i]).motion();
         auto m2 = (linkWorldInv * mc2.bodyMotions[i]).motion();
         auto dV = (m2 - m1) / dt;
-        for (int n = 0; n < order - 1; ++n) {
+        for (cdm::Index n = 0; n < order - 1; ++n) {
             REQUIRE((dV[n] - m2[n + 1]).vector().norm() < dt * 1000.);
         }
     }

@@ -20,8 +20,8 @@ public:
     Joint(const std::string& name, Type type, const Eigen::Vector3d& axis = Eigen::Vector3d::Zero());
 
     Type type() const noexcept;
-    int nParam() const noexcept;
-    int dof() const noexcept;
+    Index nParam() const noexcept;
+    Index dof() const noexcept;
     const std::string& name() const noexcept;
     const MotionSubspace& S() const noexcept;
 
@@ -35,8 +35,8 @@ private:
     std::string m_name;
     Type m_type;
     MotionSubspace m_S;
-    int m_params;
-    int m_dof;
+    Index m_params;
+    Index m_dof;
 };
 
 } // namespace cdm

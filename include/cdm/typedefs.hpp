@@ -4,6 +4,9 @@
 
 namespace cdm {
 
+constexpr int Dynamic = coma::Dynamic;
+using Index = typename coma::Index;
+
 using MotionVector = coma::MotionVector<double>;
 using ForceVector = coma::ForceVector<double>;
 using Transform = coma::Transform<double>;

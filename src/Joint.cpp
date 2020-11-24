@@ -14,12 +14,12 @@ Joint::Type Joint::type() const noexcept
     return m_type;
 }
 
-int Joint::nParam() const noexcept
+Index Joint::nParam() const noexcept
 {
     return m_params;
 }
 
-int Joint::dof() const noexcept
+Index Joint::dof() const noexcept
 {
     return m_dof;
 }
