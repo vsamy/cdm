@@ -7,28 +7,37 @@
 #include <rbdyn/FD.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
+#include <rbdyn/ID.h>
 #include <tuple>
 
-TEST_CASE("FD", "[FD]")
+struct FixedOrder {
+    static constexpr int order = 5;
+};
+
+struct DynamicOrder {
+    static constexpr int order = coma::Dynamic;
+};
+
+// TODO: this does not test dynamic currently
+TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
 {
-    constexpr Index order = 5;
+    using Index = cdm::Index;
+    constexpr int order = FixedOrder::order;
 
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;
     rbd::MultiBodyGraph mbg;
     std::tie(mb, mbc, mbg) = rbd::makeHumanBody();
 
-    coma::Model<double> model = coma::makeHumanBody<double>();
-    coma::ModelConfig<double, 6, order> mcNoGrav;
-    coma::ModelConfig<double, 6, order> mc;
-    // coma::ModelConfig<double, 6, order> mc2;
+    cdm::Model model = cdm::makeHumanBody();
+    cdm::ModelConfig<order> mcNoGrav;
+    cdm::ModelConfig<order> mc;
 
-    Index nt = 21;
+    int nt = 21;
     double dt = 1e-8;
-    Index t1 = nt / 2;
-    Index t2 = t1 + 1;
+    int t = nt / 2;
     auto data = GenerateData<order>(mb, mbc, nt, dt);
-    data.setCurData(t1);
+    data.setCurData(t);
 
     // No gravity
     data.gravity.setZero();
@@ -50,23 +59,23 @@ TEST_CASE("FD", "[FD]")
     rbd::forwardAcceleration(mb, mbc);
     id.inverseDynamics(mb, mbc);
 
-    std::vector<Eigen::VectorXd> tauP(mb.nrJoints());
-    std::vector<Eigen::VectorXd> tauF(mb.nrJoints());
-    const auto& factors = coma::factorial_factors<double, ord>;
-    for (Index i = 0; i < mb.nrJoints(); ++i) {
-        auto G = makeDiag<ord>(mbc.motionSubspace[i]);
-        tauP[i] = G.transpose() * treeNoGrav.jointMomentums[i].vector();
-        tauF[i] = tree.jointTorques[i];
-        Index dof = mb.joint(i).dof();
-        for (Index n = 0; n < ord; ++n) {
+    std::vector<Eigen::VectorXd> tauP(model.nLinks());
+    std::vector<Eigen::VectorXd> tauF(model.nLinks());
+    const auto& factors = coma::factorial_factors<double, order>;
+    for (Index i = 0; i < model.nLinks(); ++i) {
+        auto GT = cdm::DiMotionSubspace<order>{ model.joint(i).S().transpose() };
+        tauP[i] = GT * mcNoGrav.jointMomentums[i];
+        tauF[i] = mc.jointTorques[i];
+        Index dof = model.joint(i).dof();
+        for (int n = 0; n < order; ++n) {
             tauP[i].segment(n * dof, dof) /= factors[n];
         }
     }
 
     // RBDyn FD
     Eigen::VectorXd tauF1{ mb.nrDof() };
-    for (Index i = 0; i < mb.nrJoints(); ++i) {
-        Index dof = mb.joint(i).dof();
+    for (int i = 0; i < mb.nrJoints(); ++i) {
+        int dof = mb.joint(i).dof();
         tauF1.segment(mb.jointPosInDof(i), dof) = tauF[i].segment(dof, dof);
     }
     mbc.jointTorque = rbd::vectorToDof(mb, tauF1);
@@ -74,77 +83,43 @@ TEST_CASE("FD", "[FD]")
     fd.forwardDynamics(mb, mbc);
 
     // Prepare recursive
-    Eigen::MatrixXd dqs(mb.nrDof(), 5);
-    Eigen::VectorXd tau(mb.nrDof());
-    Eigen::VectorXd f = Eigen::VectorXd::Zero(mb.nrDof());
-    for (Index i = 0; i < 5; ++i) {
-        dqs.col(i) = info.dqs[i].col(t);
-        info.dqs[i].col(t).setZero();
+    Eigen::MatrixXd dqs = data.dqs[t];
+    Eigen::VectorXd tau(model.nDof());
+    Eigen::VectorXd f = Eigen::VectorXd::Zero(model.nDof());
+    data.dqs[t].setZero();
+
+    // FD recursion
+    for (int n = 0; n < order; ++n) {
+        for (Index j = 0; j < model.nLinks(); ++j) {
+            Index dof = model.joint(j).dof();
+            tau.segment(model.jointPosInDof(j), dof) = tauF[j].segment(n * dof, dof);
+            f.segment(model.jointPosInDof(j), dof) = mc.jointTorques[j].segment(n * dof, dof);
+        }
+        data.dqs[t].col(n) = cdm::standardFD<order>(model, mc, tau - f);
+        Init(data, model, mc);
+        ID(model, mc);
     }
 
-    // Check recursion
-    tree.init(t, info);
-    ID(info, tree);
-    for (Index n = 0; n < ord; ++n) {
-        for (Index j = 0; j < mb.nrJoints(); ++j) {
-            Index dof = mb.joint(j).dof();
-            tau.segment(mb.jointPosInDof(j), dof) = tauF[j].segment(n * dof, dof);
-            f.segment(mb.jointPosInDof(j), dof) = tree.jointTorques[j].segment(n * dof, dof);
-        }
-        info.dqs[n].col(t) = standard_FD(info, tree, tau - f);
-        tree.init(t, info);
-        ID(info, tree);
-    }
-    Eigen::MatrixXd yErr2{ mb.nrJoints(), ord };
-    for (Index i = 0; i < mb.nrJoints(); ++i) {
-        Index pos = mb.jointPosInDof(i);
-        Index dof = mb.joint(i).dof();
-        for (Index n = 0; n < ord; ++n) {
-            yErr2.col(n)(i) = (info.dqs[n].col(t).segment(pos, dof) - dqs.col(n).segment(pos, dof)).norm();
-        }
-    }
+    REQUIRE(data.dqs[t].isApprox(dqs));
 
     // FD
-    std::vector<Eigen::VectorXd> y = FD(info, tree, tauP);
-    Eigen::VectorXd ddq{ mb.nrDof() };
-    for (Index i = 0; i < mb.nrJoints(); ++i) {
-        Index pos = mb.jointPosInDof(i);
-        Index dof = mb.joint(i).dof();
+    std::vector<Eigen::VectorXd> y = FD(model, mc, tauP);
+    Eigen::VectorXd ddq{ model.nDof() };
+    for (Index i = 0; i < model.nLinks(); ++i) {
+        Index pos = model.jointPosInDof(i);
+        Index dof = model.joint(i).dof();
         ddq.segment(pos, dof) = y[i].segment(dof, dof);
     }
 
     // Check with RBDyn
     Eigen::VectorXd alphaD = rbd::dofToVector(mb, mbc.alphaD);
-    double rbdErr = (alphaD - ddq).norm();
+    REQUIRE(alphaD.isApprox(ddq));
 
     // Check motion
-    Eigen::MatrixXd yErr{ mb.nrJoints(), ord };
-    for (Index i = 0; i < mb.nrJoints(); ++i) {
-        Index dof = mb.joint(i).dof();
-        for (Index n = 0; n < ord; ++n) {
-            yErr.col(n)(i) = (y[i].segment(n * dof, dof) * factors[n] - dqs.col(n).segment(mb.jointPosInDof(i), dof)).norm();
+    for (Index i = 0; i < model.nLinks(); ++i) {
+        Index dof = model.joint(i).dof();
+        for (int n = 0; n < order; ++n) {
+            REQUIRE(dqs.col(n).segment(model.jointPosInDof(i), dof).isApprox(y[i].segment(n * dof, dof) * factors[n]));
         }
-    }
-
-    std::cout << "\nComparison with RBDyn output: " << rbdErr
-              << "\nComparison with ID input: ";
-    if (VERBOSITY) {
-        std::cout << "\nMax dq norm error: " << yErr.col(0).maxCoeff()
-                  << "\nMax d2q norm error: " << yErr.col(1).maxCoeff()
-                  << "\nMax d3q norm error: " << yErr.col(2).maxCoeff()
-                  << "\nMax d4q norm error: " << yErr.col(3).maxCoeff()
-                  << "\nMax d5q norm error: " << yErr.col(4).maxCoeff();
-    } else {
-        std::cout << "Max norm error = " << yErr.maxCoeff();
-    }
-    std::cout << "\nComparison for recursive FD:";
-    if (VERBOSITY) {
-        std::cout << "\nMax dq norm error: " << yErr2.col(0).maxCoeff()
-                  << "\nMax d2q norm error: " << yErr2.col(1).maxCoeff()
-                  << "\nMax d3q norm error: " << yErr2.col(2).maxCoeff()
-                  << "\nMax d4q norm error: " << yErr2.col(3).maxCoeff()
-                  << "\nMax d5q norm error: " << yErr2.col(4).maxCoeff();
-    } else {
-        std::cout << "Max norm error = " << yErr2.maxCoeff();
     }
 }

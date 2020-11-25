@@ -6,20 +6,20 @@
 #include <rbdyn/MultiBodyConfig.h>
 
 struct TrajectoryData {
-    void setCurData(cdm::Index t)
+    void setCurData(int t)
     {
         if (t < 0) {
             curData = 0;
-        } else if (t > static_cast<cdm::Index>(time.size())) {
-            curData = static_cast<cdm::Index>(time.size());
+        } else if (t > static_cast<int>(time.size())) {
+            curData = static_cast<int>(time.size());
         } else {
             curData = t;
         }
     }
 
-    cdm::Index order;
-    cdm::Index curData;
-    cdm::Index nt;
+    int order;
+    int curData;
+    int nt;
     double dt;
     Eigen::VectorXd time;
     std::vector<Eigen::VectorXd> q;
@@ -28,7 +28,7 @@ struct TrajectoryData {
 };
 
 template <int Order>
-TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc, cdm::Index nt, double dt = 1e-8)
+TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc, int nt, double dt = 1e-8)
 {
     constexpr cdm::Index order = Order > 2 ? Order : 2;
     TrajectoryData data;
@@ -46,7 +46,7 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     Eigen::ArrayXd a = Eigen::ArrayXd::Random(mb.nrDof());
     Eigen::ArrayXd b = Eigen::ArrayXd::Random(mb.nrDof());
     Eigen::ArrayXd w = Eigen::ArrayXd::Random(mb.nrDof());
-    for (cdm::Index i = 0; i < nt; ++i) {
+    for (int i = 0; i < nt; ++i) {
         int n = order / 2;
         for (int k = 0; k < n; ++k) {
             data.dqs[i].col(2 * k) = std::pow(-1., k) * a * w.pow(2 * k) * (w * data.time(i) + b).sin();
@@ -57,7 +57,7 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
         }
     }
 
-    for (cdm::Index i = 0; i < nt - 1; ++i) {
+    for (int i = 0; i < nt - 1; ++i) {
         auto alpha = rbd::vectorToDof(mb, data.dqs[i].col(0));
         auto alphaD = rbd::vectorToDof(mb, data.dqs[i].col(1));
         for (int j = 0; j < mb.nrJoints(); ++j)
@@ -75,7 +75,7 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
 void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc)
 {
     mbc.gravity = data.gravity;
-    for (cdm::Index j = 0; j < mb.nrJoints(); ++j) {
+    for (int j = 0; j < mb.nrJoints(); ++j) {
         mbc.q = rbd::vectorToParam(mb, data.q[data.curData]);
         mbc.alpha = rbd::vectorToDof(mb, data.dqs[data.curData].col(0));
         mbc.alphaD = rbd::vectorToDof(mb, data.dqs[data.curData].col(1));

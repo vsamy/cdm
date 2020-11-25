@@ -120,6 +120,16 @@ const std::vector<Index>& Model::jointChilds() const noexcept
     return m_jointChilds;
 }
 
+const std::vector<Index>& Model::jointPosInParam() const noexcept
+{
+    return m_jointPosInParam;
+}
+
+const std::vector<Index>& Model::jointPosInDof() const noexcept
+{
+    return m_jointPosInDof;
+}
+
 const std::vector<Transform>& Model::A0s() const noexcept
 {
     return m_A0;

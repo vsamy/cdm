@@ -3,36 +3,37 @@
 namespace cdm {
 
 template <int Order>
-Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& Tau)
+std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& tau)
 {
     const auto& parents = m.jointParents();
+    const int dynOrder = mc.world.order();
 
     std::vector<CMTM<Order>> C(m.nLinks());
     std::vector<DiMotionSubspace<Order>> G(m.nLinks());
     std::vector<ForceVectorX<Order>> PA(m.nLinks());
     std::vector<BTM66<Order>> IA(m.nLinks());
-    std::vector<DBX<Order>> U(m.nLinks());
-    std::vector<DBX<Order>> UD(m.nLinks());
-    std::vector<DBX<Order>> D(m.nLinks());
-    std::vector<DBX<Order>> DInv(m.nLinks());
-    Eigen::VectorXd y(m.nDof());
+    std::vector<BTM66<Order>> U(m.nLinks());
+    std::vector<BTM66<Order>> UD(m.nLinks());
+    std::vector<BTM66<Order>> D(m.nLinks());
+    std::vector<BTM66<Order>> DInv(m.nLinks());
+    std::vector<Eigen::VectorXd> y(dynOrder, Eigen::VectorXd(m.nDof()));
     std::vector<MotionVectorX<Order>> T(m.nLinks());
 
     for (Index i = 0; i < m.nLinks(); ++i) {
-        G[i] = DiMotionSubspace{ mb.joint(i).S() };
+        G[i] = DiMotionSubspace<Order>{ m.joint(i).S() };
         IA[i].setZero(Order);
         PA[i].setZero(Order);
     }
 
     for (Index i = m.nLinks() - 1; i >= 0; --i) {
-        IA[i] += DiInertia(mb.body(i).inertia());
+        IA[i] += DiInertia<Order>(m.body(i).inertia());
         U[i] = IA[i] * G[i];
         auto GT = G[i].transpose();
         UD[i] = GT * IA[i];
         D[i] = GT * U[i];
 
         DInv[i] = D[i].inverse();
-        y[i] = DInv[i] * (Tau[i] - GT * PA[i]);
+        y[i] = DInv[i] * (tau[i] - GT * PA[i]);
         if (parents[i] != -1) {
             auto tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
             IA[parents[i]] += DualMul(mc.jointMotions[i], tmp1) * mc.jointMotions[i];
@@ -55,57 +56,54 @@ Eigen::VectorXd FD(const Model& m, const ModelConfig<Order>& mc, const std::vect
     return y;
 }
 
-// template <int Order>
-// Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& Tau)
-// {
-//     constexpr int ord = Tree::order;
-//     const auto& mb = info.model.mb;
-//     const auto& pred = mb.predecessors();
-//     const auto& succ = mb.successors();
-//     const auto& jpd = mb.jointsPosInDof();
+template <int Order>
+Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const Eigen::VectorXd& tau)
+{
+    const auto& parents = m.jointParents();
+    const auto& jpd = m.jointPosInDof();
 
-//     std::vector<Eigen::Vector6d> PA(mb.nrBodies());
-//     std::vector<Eigen::Matrix6d> IA(mb.nrBodies());
-//     std::vector<Eigen::Matrix6d> X(mb.nrBodies());
-//     std::vector<Eigen::Vector6d> T(mb.nrBodies());
-//     std::vector<Eigen::MatrixXd> U(mb.nrBodies());
-//     std::vector<Eigen::MatrixXd> D(mb.nrBodies());
-//     Eigen::VectorXd y(tau.size());
+    std::vector<Eigen::Vector6d> PA(m.nLinks());
+    std::vector<Eigen::Matrix6d> IA(m.nLinks());
+    std::vector<Eigen::Matrix6d> A(m.nLinks());
+    std::vector<Eigen::Vector6d> T(m.nLinks());
+    std::vector<Eigen::MatrixXd> U(m.nLinks());
+    std::vector<Eigen::MatrixXd> D(m.nLinks());
+    Eigen::VectorXd y(tau.size());
 
-//     for (Index i = 0; i < mb.nrBodies(); ++i) {
-//         IA[i].setZero();
-//         PA[i].setZero();
-//         X[i] = tree.joints[i].transform().inverse().matrix();
-//     }
+    for (Index i = 0; i < m.nLinks(); ++i) {
+        IA[i].setZero();
+        PA[i].setZero();
+        A[i] = mc.jointMotions[i].transform().inverse().spatialMatrix();
+    }
 
-//     for (Index i = mb.nrBodies() - 1; i >= 0; --i) {
-//         const auto& S = mb.joint(i).motionSubspace();
-//         Index dof = mb.joint(i).dof();
-//         IA[i] += mb.body(i).inertia().matrix();
-//         U[i] = IA[i] * S;
-//         D[i] = S.transpose() * U[i];
+    for (Index i = m.nLinks() - 1; i >= 0; --i) {
+        auto S = m.joint(i).S().matrix();
+        Index dof = m.joint(i).dof();
+        IA[i] += m.body(i).inertia().matrix();
+        U[i] = IA[i] * S;
+        D[i] = S.transpose() * U[i];
 
-//         y.segment(jpd[i], dof) = D[i].inverse() * (tau.segment(jpd[i], dof) - S.transpose() * PA[i]);
-//         if (pred[i] != -1) {
-//             auto tmp1 = IA[i] - U[i] * D[i].inverse() * U[i].transpose();
-//             IA[pred[i]] += X[i].transpose() * tmp1 * X[i];
-//             auto tmp2 = PA[i] + U[i] * y.segment(jpd[i], dof);
-//             PA[pred[i]] += X[i].transpose() * tmp2;
-//         }
-//     }
+        y.segment(jpd[i], dof) = D[i].inverse() * (tau.segment(jpd[i], dof) - S.transpose() * PA[i]);
+        if (parents[i] != -1) {
+            auto tmp1 = IA[i] - U[i] * D[i].inverse() * U[i].transpose();
+            IA[parents[i]] += A[i].transpose() * tmp1 * A[i];
+            auto tmp2 = PA[i] + U[i] * y.segment(jpd[i], dof);
+            PA[parents[i]] += A[i].transpose() * tmp2;
+        }
+    }
 
-//     for (Index i = 0; i < mb.nrJoints(); ++i) {
-//         Index dof = mb.joint(i).dof();
-//         if (pred[i] != -1) {
-//             y.segment(jpd[i], dof) -= D[i].inverse() * U[i].transpose() * X[i] * T[pred[i]];
-//         }
-//         T[i] = mb.joint(i).motionSubspace() * y.segment(jpd[i], dof);
-//         if (pred[i] != -1) {
-//             T[i] += X[i] * T[pred[i]];
-//         }
-//     }
+    for (Index i = 0; i < m.nLinks(); ++i) {
+        Index dof = m.joint(i).dof();
+        if (parents[i] != -1) {
+            y.segment(jpd[i], dof) -= D[i].inverse() * U[i].transpose() * A[i] * T[parents[i]];
+        }
+        T[i] = m.joint(i).S().matrix() * y.segment(jpd[i], dof);
+        if (parents[i] != -1) {
+            T[i] += A[i] * T[parents[i]];
+        }
+    }
 
-//     return y;
-// }
+    return y;
+}
 
 } // namespace cdm

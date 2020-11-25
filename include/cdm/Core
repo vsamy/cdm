@@ -2,6 +2,8 @@
 
 #include "cdm/API.hpp"
 
+#include "cdm/coma_extensions.hpp"
+
 #include "cdm/typedefs.hpp"
 
 #include "cdm/Body.hpp"

@@ -29,10 +29,10 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     cdm::ModelConfig<order> mc1;
     cdm::ModelConfig<order> mc2;
 
-    cdm::Index nt = 21;
+    int nt = 21;
     double dt = 1e-8;
-    cdm::Index t1 = nt / 2;
-    cdm::Index t2 = t1 + 1;
+    int t1 = nt / 2;
+    int t2 = t1 + 1;
     auto data = GenerateData<order>(mb, mbc, nt, dt);
     data.setCurData(t1);
 

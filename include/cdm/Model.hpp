@@ -32,6 +32,8 @@ public:
     const std::vector<Body>& bodies() const noexcept;
     const std::vector<Index>& jointParents() const noexcept;
     const std::vector<Index>& jointChilds() const noexcept;
+    const std::vector<Index>& jointPosInParam() const noexcept;
+    const std::vector<Index>& jointPosInDof() const noexcept;
     const std::vector<Transform>& A0s() const noexcept;
 
 private:

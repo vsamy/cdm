@@ -29,11 +29,11 @@ void test_id(bool withGravity)
     cdm::ModelConfig<Order> mc1;
     cdm::ModelConfig<Order> mc2;
 
-    cdm::Index nt = 21;
+    int nt = 21;
     double dt = 1e-8;
-    cdm::Index t1 = nt / 2;
-    cdm::Index t2 = t1 + 1;
-    auto data = GenerateData<Order>(mb, mbc, nt, dt);
+    int t1 = nt / 2;
+    int t2 = t1 + 1;
+    auto data = GenerateData<FixedOrder::order>(mb, mbc, nt, dt);
     if (!withGravity) {
         data.gravity.setZero();
     }
@@ -87,7 +87,7 @@ void test_id(bool withGravity)
         auto dlF = (mc2.bodyForces[i] - mc1.bodyForces[i]) / dt;
         auto djP = (mc2.jointMomentums[i] - mc1.jointMomentums[i]) / dt;
         auto djF = (mc2.jointForces[i] - mc1.jointForces[i]) / dt;
-        for (cdm::Index n = 0; n < Order - 1; ++n) {
+        for (cdm::Index n = 0; n < FixedOrder::order - 1; ++n) {
             if (!withGravity) {
                 REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
                 REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);

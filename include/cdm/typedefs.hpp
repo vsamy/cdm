@@ -1,11 +1,12 @@
 #pragma once
 
+#include "cdm/coma_extensions.hpp"
 #include <coma/Core>
 
 namespace cdm {
 
 constexpr int Dynamic = coma::Dynamic;
-using Index = typename coma::Index;
+using coma::Index;
 
 using MotionVector = coma::MotionVector<double>;
 using ForceVector = coma::ForceVector<double>;
@@ -26,5 +27,9 @@ template <int NVec>
 using DiInertia = coma::DiInertia<double, NVec>;
 template <int NVec>
 using DiMotionSubspace = coma::DiMotionSubspace<double, NVec>;
+template <int NVec>
+using DBX = coma::DBX<double, NVec>;
+template <int NVec>
+using BTM66 = coma::BTM66<double, NVec>;
 
 } // namespace cdm

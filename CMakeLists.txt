@@ -25,7 +25,7 @@ endif()
 
 # External dependencies
 find_package(Eigen3 REQUIRED)
-find_package(coma REQUIRED)
+find_package(coma 1.0.0 REQUIRED)
 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
