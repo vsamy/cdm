@@ -125,7 +125,7 @@ public:
         Derived out;
         out.m_diagonalPart = lhs.m_diagonalPart * rhs.m_diagonalPart;
         for (Index i = 0; i < lhs.m_offDiagonalPart.size(); ++i) {
-            out[i] = lhs.m_diagonalPart * rhs.m_offDiagonalPart[i] + lhs.m_offDiagonalPart[i] * lhs.m_diagonalPart;
+            out[i] = lhs.m_diagonalPart * rhs.m_offDiagonalPart[i] + rhs.m_offDiagonalPart[i] * lhs.m_diagonalPart;
             for (Index j = 0; j < i; ++j)
                 out.m_offDiagonalPart[i] += lhs.m_offDiagonalPart[j] * rhs.m_offDiagonalPart[i - 1 - j];
         }
@@ -133,16 +133,45 @@ public:
         return out;
     }
 
+    friend Derived operator-(Derived lhs, const Derived& rhs)
+    {
+        lhs -= rhs;
+        return rhs;
+    }
+
+    Derived& operator-=(const Derived& rhs)
+    {
+        m_diagonalPart -= rhs.m_diagonalPart;
+        for (Index i = 0; i < m_offDiagonalPart.size(); ++i) {
+            m_offDiagonalPart[i] -= rhs.m_offDiagonalPart[i];
+        }
+        return this->derived();
+    }
+
+    friend Derived operator+(Derived lhs, const Derived& rhs)
+    {
+        lhs += rhs;
+        return rhs;
+    }
+    Derived& operator+=(const Derived& rhs)
+    {
+        m_diagonalPart += rhs.m_diagonalPart;
+        for (Index i = 0; i < m_offDiagonalPart.size(); ++i) {
+            m_offDiagonalPart[i] += rhs.m_offDiagonalPart[i];
+        }
+        return this->derived();
+    }
+
     template <int NVec>
     Derived& operator+=(const DiInertia<Scalar, NVec>& rhs)
     {
-        m_diagonalPart += rhs.block();
+        m_diagonalPart += rhs.block().matrix();
         return this->derived();
     }
     template <int NVec>
     Derived& operator*=(const DiMotionSubspace<Scalar, NVec>& rhs)
     {
-        m_diagonalPart *= rhs.block();
+        m_diagonalPart *= rhs.block().matrix();
         return this->derived();
     }
 
@@ -180,6 +209,13 @@ template <typename Scalar, int Order>
 class BTM66 : public BlockTriangularMatrixTT<BTM66<Scalar, Order>> {
 public:
     BTM66() = default;
+    BTM66(const CMTM<Scalar, 6, Order>& cmtm)
+    {
+        this->m_diagonalPart = cmtm.transform().spatialMatrix();
+        for (Index i = 0; i < cmtm.order(); ++i) {
+            this->m_offDiagonalPart[i] = cmtm[i];
+        }
+    }
 };
 
 // operators
@@ -214,15 +250,15 @@ template <typename Scalar, int Order, int NVec>
 BTM66<Scalar, Order> operator*(const DiMotionSubspace<Scalar, NVec>& lhs, BTM66<Scalar, Order> rhs)
 {
     // TODO: add assert in all operators
-    rhs.diagPart() = lhs.block() * rhs.diagPart();
+    rhs.diagPart() = lhs.block().matrix() * rhs.diagPart();
     return rhs;
 }
 
 template <typename Scalar, int Order, typename Derived>
-Derived operator*(const BTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Derived>& rhs)
+Eigen::VectorXd operator*(const BTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Derived>& rhs)
 {
     // TODO: add assert in all operators
-    Derived out(rhs.size());
+    Eigen::VectorXd out{ rhs.size() };
     for (Index i = 0; i < Order; ++i) {
         out.segment<6>(6 * i) = lhs.diagPart() * rhs.segment<6>(6 * i);
         for (Index j = 0; j < i; ++j)
@@ -230,6 +266,39 @@ Derived operator*(const BTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Deriv
     }
 
     return out;
+}
+
+template <typename Scalar, int Order>
+BTM66<Scalar, Order> operator*(BTM66<Scalar, Order> lhs, const CMTM<Scalar, 6, Order>& rhs)
+{
+    lhs.diagPart() *= rhs.transform().spatialMatrix();
+    for (Index i = 0; i < rhs.order(); ++i) {
+        lhs[i] = lhs.diagPart() * rhs[i].matrix() + lhs[i] * rhs.transform().spatialMatrix();
+        for (Index j = 0; j < i; ++j)
+            lhs[i] += lhs[j] * rhs[i - 1 - j].matrix();
+    }
+
+    return lhs;
+}
+
+template <typename Scalar, int Order>
+BTM66<Scalar, Order> DualMul(const CMTM<Scalar, 6, Order>& lhs, const BTM66<Scalar, Order>& rhs)
+{
+    BTM66<Scalar, Order> out;
+    out.diagPart() = lhs.transform().dualMatrix() * rhs.diagPart();
+    for (Index i = 0; i < lhs.order(); ++i) {
+        out[i] = lhs.transform().dualMatrix() * rhs[i] + lhs[i].dualMatrix() * rhs.diagPart();
+        for (Index j = 0; j < i; ++j)
+            out[i] += lhs[j].dualMatrix() * rhs[i - 1 - j];
+    }
+
+    return out;
+}
+
+template <typename Scalar, int Order>
+ForceVectorX<Scalar, Order> DualMul(const BTM66<Scalar, Order>& lhs, const ForceVectorX<Scalar, Order>& rhs)
+{
+    return lhs * rhs;
 }
 
 } // namespace coma

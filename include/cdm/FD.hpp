@@ -6,7 +6,7 @@ template <int Order>
 std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& tau)
 {
     const auto& parents = m.jointParents();
-    const int dynOrder = mc.world.order();
+    const Index dynOrder = mc.world.order();
 
     std::vector<CMTM<Order>> C(m.nLinks());
     std::vector<DiMotionSubspace<Order>> G(m.nLinks());
@@ -37,15 +37,14 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
         if (parents[i] != -1) {
             auto tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
             IA[parents[i]] += DualMul(mc.jointMotions[i], tmp1) * mc.jointMotions[i];
-            auto tmp2 = PA[i] + U[i] * y[i];
-            PA[parents[i]] += DualMul(mc.jointMotions[i], tmp2);
+            auto tmp2 = PA[i] + ForceVectorX<Order>{ U[i] * y[i] };
+            PA[parents[i]] += mc.jointMotions[i].dualMul(tmp2);
         }
     }
 
     for (Index i = 0; i < m.nLinks(); ++i) {
-        Index dof = m.joint(i).dof();
         if (parents[i] != -1) {
-            y[i] -= DInv[i] * UD[i] * (mc.jointMotions[i] * T[parents[i]]);
+            y[i] -= DInv[i] * UD[i] * (mc.jointMotions[i] * T[parents[i]]).vector();
         }
         T[i] = G[i] * y[i];
         if (parents[i] != -1) {
