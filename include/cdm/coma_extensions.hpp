@@ -8,7 +8,7 @@ template <typename, int>
 class DBX;
 
 template <typename, int>
-class BTM66;
+class LBTM66;
 
 namespace internal {
 
@@ -22,7 +22,7 @@ struct traits<DBX<_Scalar, _NVec>> {
 };
 
 template <typename _Scalar, int _Order>
-struct traits<BTM66<_Scalar, _Order>> {
+struct traits<LBTM66<_Scalar, _Order>> {
     static constexpr int order = _Order;
     static constexpr int n_vec = order == Dynamic ? Dynamic : order + 1;
     using Scalar = _Scalar;
@@ -37,7 +37,7 @@ struct traits<BTM66<_Scalar, _Order>> {
 // Block triangular type
 
 template <typename Derived>
-class BlockTriangularMatrixTT {
+class LowerBlockTriangularMatrixTT {
     friend Derived;
     using traits = typename internal::traits<Derived>;
     using Scalar = typename traits::Scalar;
@@ -47,7 +47,7 @@ class BlockTriangularMatrixTT {
     using storage_t = typename traits::storage_t;
 
 public:
-    BlockTriangularMatrixTT() = default;
+    LowerBlockTriangularMatrixTT() = default;
 
     const diagonal_t& diagPart() const noexcept { return m_diagonalPart; }
     diagonal_t& diagPart() noexcept { return m_diagonalPart; }
@@ -177,41 +177,41 @@ public:
 
 // TODO: test operator on this
 template <typename Scalar, int Order>
-class BTM66 : public BlockTriangularMatrixTT<BTM66<Scalar, Order>> {
+class LBTM66 : public LowerBlockTriangularMatrixTT<LBTM66<Scalar, Order>> {
 public:
-    BTM66() = default;
+    LBTM66() = default;
 };
 
 // operators
 
 template <typename Scalar, int Order, int NVec>
-BTM66<Scalar, Order> operator+(BTM66<Scalar, Order> lhs, const DiInertia<Scalar, NVec>& rhs)
+LBTM66<Scalar, Order> operator+(LBTM66<Scalar, Order> lhs, const DiInertia<Scalar, NVec>& rhs)
 {
     lhs += rhs;
     return lhs;
 }
 template <typename Scalar, int Order, int NVec>
-BTM66<Scalar, Order> operator+(BTM66<Scalar, Order> lhs, const DiMotionSubspace<Scalar, NVec>& rhs)
+LBTM66<Scalar, Order> operator+(LBTM66<Scalar, Order> lhs, const DiMotionSubspace<Scalar, NVec>& rhs)
 {
     lhs += rhs;
     return lhs;
 }
 template <typename Scalar, int Order, int NVec>
-BTM66<Scalar, Order> operator+(const DiMotionSubspace<Scalar, NVec>& lhs, BTM66<Scalar, Order> rhs)
+LBTM66<Scalar, Order> operator+(const DiMotionSubspace<Scalar, NVec>& lhs, LBTM66<Scalar, Order> rhs)
 {
     rhs += lhs;
     return rhs;
 }
 
 template <typename Scalar, int Order, int NVec>
-BTM66<Scalar, Order> operator*(BTM66<Scalar, Order> lhs, const DiMotionSubspace<Scalar, NVec>& rhs)
+LBTM66<Scalar, Order> operator*(LBTM66<Scalar, Order> lhs, const DiMotionSubspace<Scalar, NVec>& rhs)
 {
     lhs *= rhs;
     return lhs;
 }
 
 template <typename Scalar, int Order, int NVec>
-BTM66<Scalar, Order> operator*(const DiMotionSubspace<Scalar, NVec>& lhs, BTM66<Scalar, Order> rhs)
+LBTM66<Scalar, Order> operator*(const DiMotionSubspace<Scalar, NVec>& lhs, LBTM66<Scalar, Order> rhs)
 {
     // TODO: add assert in all operators
     rhs.diagPart() = lhs.block() * rhs.diagPart();
@@ -219,7 +219,7 @@ BTM66<Scalar, Order> operator*(const DiMotionSubspace<Scalar, NVec>& lhs, BTM66<
 }
 
 template <typename Scalar, int Order, typename Derived>
-Derived operator*(const BTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Derived>& rhs)
+Derived operator*(const LBTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Derived>& rhs)
 {
     // TODO: add assert in all operators
     Derived out(rhs.size());
@@ -227,6 +227,21 @@ Derived operator*(const BTM66<Scalar, Order>& lhs, const Eigen::MatrixBase<Deriv
         out.segment<6>(6 * i) = lhs.diagPart() * rhs.segment<6>(6 * i);
         for (Index j = 0; j < i; ++j)
             out.segment<6>(6 * i) += lhs[i - j - 1] * rhs.segment<6>(6 * j);
+    }
+
+    return out;
+}
+
+template <typename Scalar, int Order, typename Derived>
+LBTM66<Scalar, Order> DualMul(const CMTM<Scalar, 6, Order>& lhs, const LBTM66<Scalar, Order>& rhs)
+{
+    LBTM66<Scalar, Order> out;
+    out.diagPart() = lhs.transformation().dualMatrix() * rhs.diagPart();
+    for (Index i = 0; i < Order; ++i) {
+        out[i] = lhs.transformation().dualMatrix() * rhs[i] + lhs[i] * rhs.diagPart();
+        for (Index j = 0; j < i; ++j) {
+            out[i] += lhs[i] * rhs[i - j];
+        }
     }
 
     return out;

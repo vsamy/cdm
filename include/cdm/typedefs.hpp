@@ -30,6 +30,6 @@ using DiMotionSubspace = coma::DiMotionSubspace<double, NVec>;
 template <int NVec>
 using DBX = coma::DBX<double, NVec>;
 template <int NVec>
-using BTM66 = coma::BTM66<double, NVec>;
+using LBTM66 = coma::LBTM66<double, NVec>;
 
 } // namespace cdm
