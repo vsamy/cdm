@@ -6,16 +6,16 @@ template <int Order>
 std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& tau)
 {
     const auto& parents = m.jointParents();
-    const Index dynOrder = mc.world.order();
+    const int dynOrder = static_cast<int>(mc.world.order());
 
     std::vector<CMTM<Order>> C(m.nLinks());
     std::vector<DiMotionSubspace<Order>> G(m.nLinks());
     std::vector<ForceVectorX<Order>> PA(m.nLinks());
-    std::vector<BTM66<Order>> IA(m.nLinks());
-    std::vector<BTM66<Order>> U(m.nLinks());
-    std::vector<BTM66<Order>> UD(m.nLinks());
-    std::vector<BTM66<Order>> D(m.nLinks());
-    std::vector<BTM66<Order>> DInv(m.nLinks());
+    std::vector<LBTM66<Order>> IA(m.nLinks());
+    std::vector<LBTM66<Order>> U(m.nLinks());
+    std::vector<LBTM66<Order>> UD(m.nLinks());
+    std::vector<LBTM66<Order>> D(m.nLinks());
+    std::vector<LBTM66<Order>> DInv(m.nLinks());
     std::vector<Eigen::VectorXd> y(dynOrder, Eigen::VectorXd(m.nDof()));
     std::vector<MotionVectorX<Order>> T(m.nLinks());
 
@@ -35,10 +35,10 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
         DInv[i] = D[i].inverse();
         y[i] = DInv[i] * (tau[i] - GT * PA[i]);
         if (parents[i] != -1) {
-            auto tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
-            IA[parents[i]] += DualMul(mc.jointMotions[i], tmp1) * mc.jointMotions[i];
-            auto tmp2 = PA[i] + ForceVectorX<Order>{ U[i] * y[i] };
-            PA[parents[i]] += mc.jointMotions[i].dualMul(tmp2);
+            LBTM66<Order> tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
+            IA[parents[i]] += coma::DualMul(mc.jointMotions[i], tmp1) * mc.jointMotions[i];
+            auto tmp2 = PA[i] + U[i] * y[i];
+            PA[parents[i]] += DualMul(mc.jointMotions[i], tmp2);
         }
     }
 
@@ -72,7 +72,7 @@ Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const Eigen::
     for (Index i = 0; i < m.nLinks(); ++i) {
         IA[i].setZero();
         PA[i].setZero();
-        A[i] = mc.jointMotions[i].transform().inverse().spatialMatrix();
+        A[i] = mc.jointMotions[i].transform().inverse().matrix();
     }
 
     for (Index i = m.nLinks() - 1; i >= 0; --i) {
