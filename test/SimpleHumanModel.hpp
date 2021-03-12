@@ -1,6 +1,8 @@
 #pragma once
 
-#include <cdm/Core>
+// #include <cdm/Core>
+#include <cdm/ModelConstructor.hpp>
+
 
 // includes
 // std

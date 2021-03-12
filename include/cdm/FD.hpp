@@ -1,5 +1,10 @@
 #pragma once
 
+#include "cdm/Model.hpp"
+#include "cdm/ModelConfig.hpp"
+#include "cdm/typedefs.hpp"
+#include "cdm/LowerBlockTriangularMatrix.hpp"
+
 namespace cdm {
 
 template <int Order>
@@ -11,17 +16,17 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
     std::vector<CMTM<Order>> C(m.nLinks());
     std::vector<DiMotionSubspace<Order>> G(m.nLinks());
     std::vector<ForceVectorX<Order>> PA(m.nLinks());
-    std::vector<LBTM66<Order>> IA(m.nLinks());
-    std::vector<LBTM66<Order>> U(m.nLinks());
-    std::vector<LBTM66<Order>> UD(m.nLinks());
-    std::vector<LBTM66<Order>> D(m.nLinks());
-    std::vector<LBTM66<Order>> DInv(m.nLinks());
+    std::vector<LB66> IA(m.nLinks());
+    std::vector<LB66> U(m.nLinks());
+    std::vector<LB66> UD(m.nLinks());
+    std::vector<LB66> D(m.nLinks());
+    std::vector<LB66> DInv(m.nLinks());
     std::vector<Eigen::VectorXd> y(dynOrder, Eigen::VectorXd(m.nDof()));
     std::vector<MotionVectorX<Order>> T(m.nLinks());
 
     for (Index i = 0; i < m.nLinks(); ++i) {
         G[i] = DiMotionSubspace<Order>{ m.joint(i).S() };
-        IA[i].setOrder(Order).setZero(6, 6);
+        IA[i].setZero(Order, Order);
         // UD[i].setOrder(Order).setZero(G[i].cols(), 6);
         // D[i].setOrder(Order).setZero(G[i].cols(), G[i].cols());
         PA[i].setZero(Order);
@@ -37,7 +42,7 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
         DInv[i] = D[i].inverse();
         y[i] = DInv[i] * (tau[i] - GT * PA[i]);
         if (parents[i] != -1) {
-            LBTM66<Order> tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
+            LB66<Order> tmp1 = IA[i] - U[i] * DInv[i] * UD[i];
             IA[parents[i]] += coma::DualMul(mc.jointMotions[i], tmp1) * mc.jointMotions[i];
             auto tmp2 = PA[i] + U[i] * y[i];
             PA[parents[i]] += DualMul(mc.jointMotions[i], tmp2);

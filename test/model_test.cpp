@@ -2,7 +2,6 @@
 #include "macros.hpp"
 #include "model_generation.hpp"
 #include <catch2/catch.hpp>
-#include <cdm/Core>
 #include <rbdyn/EulerIntegration.h>
 
 TEST_CASE("body", "[model][body]")

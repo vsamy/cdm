@@ -1,5 +1,8 @@
 #pragma once
 
+#include "cdm/Model.hpp"
+#include "cdm/ModelConfig.hpp"
+
 namespace cdm {
 
 template <int Order>

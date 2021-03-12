@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cdm/Core>
+#include <cdm/typedefs.hpp>
+#include <cdm/ModelConfig.hpp>
 #include <rbdyn/EulerIntegration.h>
 #include <rbdyn/MultiBody.h>
 #include <rbdyn/MultiBodyConfig.h>

@@ -1,8 +1,8 @@
 #include "SimpleHumanModel.hpp"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <cdm/FK.hpp>
 #include <catch2/catch.hpp>
-#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
@@ -38,7 +38,7 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
 
     // First FK used for numerical comparison
     Init(data, model, mc1);
-    FK(model, mc1);
+    cdm::FK(model, mc1);
 
     // RBDyn FK
     Init(data, mb, mbc);
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     // Second FK
     data.setCurData(t2);
     Init(data, model, mc2);
-    FK(model, mc2);
+    cdm::FK(model, mc2);
 
     // Numerical check
     for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {

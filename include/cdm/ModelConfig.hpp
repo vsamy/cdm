@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cdm/typedefs.hpp"
+
 namespace cdm {
 
 template <int Order>

@@ -10,10 +10,11 @@ set(HEADERS
     ${PROJECT_NAME}/Core
     ${PROJECT_NAME}/API.hpp
     ${PROJECT_NAME}/Body.hpp
-    # ${PROJECT_NAME}/FD.hpp
+    ${PROJECT_NAME}/FD.hpp
     ${PROJECT_NAME}/FK.hpp
     ${PROJECT_NAME}/ID.hpp
     ${PROJECT_NAME}/Joint.hpp
+    ${PROJECT_NAME}/LowerBlockTriangularMatrix.hpp
     ${PROJECT_NAME}/Model.hpp
     ${PROJECT_NAME}/ModelConfig.hpp
     ${PROJECT_NAME}/ModelConstructor.hpp

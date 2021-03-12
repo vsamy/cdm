@@ -1,8 +1,10 @@
 #include "SimpleHumanModel.hpp"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <cdm/FK.hpp>
+#include <cdm/ID.hpp>
+#include <cdm/FD.hpp>
 #include <catch2/catch.hpp>
-#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FD.h>
 #include <rbdyn/FK.h>
@@ -42,14 +44,14 @@ TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
     // No gravity
     data.gravity.setZero();
     Init(data, model, mcNoGrav);
-    FK(model, mcNoGrav);
-    ID(model, mcNoGrav);
+    cdm::FK(model, mcNoGrav);
+    cdm::ID(model, mcNoGrav);
 
     // With gravity
     data.gravity = Eigen::Vector3d(0, 0, 9.81); // gravity acceleration applied on robot
     Init(data, model, mc);
-    FK(model, mc);
-    ID(model, mc);
+    cdm::FK(model, mc);
+    cdm::ID(model, mc);
 
     // RBDyn
     Init(data, mb, mbc);
@@ -90,8 +92,8 @@ TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
 
     // FD recursion
     Init(data, model, mc);
-    FK(model, mc);
-    ID(model, mc);
+    cdm::FK(model, mc);
+    cdm::ID(model, mc);
     for (int n = 0; n < order; ++n) {
         for (Index j = 0; j < model.nLinks(); ++j) {
             Index dof = model.joint(j).dof();
@@ -100,8 +102,8 @@ TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
         }
         data.dqs[t].col(n) = cdm::standardFD<order>(model, mc, tau - f);
         Init(data, model, mc);
-        FK(model, mc);
-        ID(model, mc);
+        cdm::FK(model, mc);
+        cdm::ID(model, mc);
     }
 
     REQUIRE(data.dqs[t].isApprox(dqs));

@@ -1,8 +1,9 @@
 #include "SimpleHumanModel.hpp"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <cdm/FK.hpp>
+#include <cdm/ID.hpp>
 #include <catch2/catch.hpp>
-#include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
@@ -41,8 +42,8 @@ void test_id(bool withGravity)
 
     // First ID used for numerical comparison
     Init(data, model, mc1);
-    FK(model, mc1);
-    ID(model, mc1);
+    cdm::FK(model, mc1);
+    cdm::ID(model, mc1);
 
     // RBDyn ID
     Init(data, mb, mbc);
@@ -76,8 +77,8 @@ void test_id(bool withGravity)
     // Second ID
     data.setCurData(t2);
     Init(data, model, mc2);
-    FK(model, mc2);
-    ID(model, mc2);
+    cdm::FK(model, mc2);
+    cdm::ID(model, mc2);
 
     // Numerical check
     // Please remember that here the 0-order force is the momentum and f[1] corresponds to the classical force so f[0] == p[0]
