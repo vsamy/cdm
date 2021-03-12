@@ -89,6 +89,9 @@ TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
     data.dqs[t].setZero();
 
     // FD recursion
+    Init(data, model, mc);
+    FK(model, mc);
+    ID(model, mc);
     for (int n = 0; n < order; ++n) {
         for (Index j = 0; j < model.nLinks(); ++j) {
             Index dof = model.joint(j).dof();
@@ -97,6 +100,7 @@ TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
         }
         data.dqs[t].col(n) = cdm::standardFD<order>(model, mc, tau - f);
         Init(data, model, mc);
+        FK(model, mc);
         ID(model, mc);
     }
 

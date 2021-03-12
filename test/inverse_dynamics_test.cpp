@@ -93,8 +93,8 @@ void test_id(bool withGravity)
                 REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
             }
             if (n != 0) {
-                REQUIRE((dlF[n] - mc2.bodyForces[i][n + 1]).vector().norm() < dt * 1000.);
-                REQUIRE((djF[n] - mc2.jointForces[i][n + 1]).vector().norm() < dt * 1000.);
+                REQUIRE((dlF[n] - mc2.bodyForces[i][n + 1]).vector().norm() < dt * 10000.);
+                REQUIRE((djF[n] - mc2.jointForces[i][n + 1]).vector().norm() < dt * 10000.);
             }
         }
     }

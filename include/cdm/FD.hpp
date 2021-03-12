@@ -21,7 +21,9 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
 
     for (Index i = 0; i < m.nLinks(); ++i) {
         G[i] = DiMotionSubspace<Order>{ m.joint(i).S() };
-        IA[i].setZero(Order);
+        IA[i].setOrder(Order).setZero(6, 6);
+        // UD[i].setOrder(Order).setZero(G[i].cols(), 6);
+        // D[i].setOrder(Order).setZero(G[i].cols(), G[i].cols());
         PA[i].setZero(Order);
     }
 
