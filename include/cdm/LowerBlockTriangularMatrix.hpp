@@ -60,6 +60,7 @@ public:
         return *this;
     }
 
+    Eigen::Index nBlocks() const noexcept { return m_rows; }
     const block_t& operator()(Eigen::Index k) const { return m_blocks[k]; }
     block_t& operator()(Eigen::Index k) { return m_blocks[k]; }
     const block_t& operator()(Eigen::Index i, Eigen::Index j) const { return m_blocks[blockIndexFromij(i, j)]; }
@@ -144,6 +145,7 @@ public:
     friend LowerBlockTriangularMatrix operator*(const LowerBlockTriangularMatrix& lhs, const LowerBlockTriangularMatrix& rhs)
     {
         assert(lhs.m_size1d == rhs.m_size1d);
+        // TODO: Maybe there is a less obscure way with O(N^2)
         LowerBlockTriangularMatrix out(lhs.m_size1d);
         Eigen::Index curColSize = lhs.m_rows;
         Eigen::Index curCol = 0;
@@ -178,12 +180,29 @@ public:
         return out;
     }
     template <int NVec>
-    friend LowerBlockTriangularMatrix operator*(const DiMotionSubspace<NVec>& lsh, const LowerBlockTriangularMatrix& rhs)
+    friend LowerBlockTriangularMatrix operator*(const DiMotionSubspace<NVec>& lhs, const LowerBlockTriangularMatrix& rhs)
     {
         assert(lhs.m_rows == NVec);
         LowerBlockTriangularMatrix out(NVec);
         for (Eigen::Index k = 0; k < m_size1d; ++k) {
             out.m_blocks[k] = lhs.block() * rhs.m_block[k];
+        }
+
+        return out;
+    }
+    template <typename EigenVec>
+    friend EigenVec operator*(const LowerBlockTriangularMatrix& lhs, const Eigen::MatrixBase<EigenVec>& rhs)
+    {
+        static_assert(std::is_same_v<Scalar, typename EigenVec::Scalar>, "Mixing wrong types");
+        assert(lhs.m_rows == rhs.size() / lhs.block_rows && rhs.size() % lhs.block_rows == 0);
+        EigenVec out = EigenVec::Zero(rhs.size());
+        Eigen::Index curCol = 0;
+        Eigen::Index curRow = 0;
+        for (Eigen::Index k = 0; k < lhs.m_size1d; ++k) {
+            out.segment<lhs.block_rows>(lhs.block_rows * curRow) += lhs.m_blocks[k] * rhs.segment<lhs.block_rows>(lhs.block_rows * curCol);
+            if (++curRow == lhs.m_rows) {
+                curRow = ++curCol;
+            }
         }
 
         return out;
