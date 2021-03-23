@@ -1,10 +1,10 @@
 #include "SimpleHumanModel.hpp"
+#include "doctest/doctest.h"
 #include "macros.hpp"
 #include "model_generation.hpp"
-#include <catch2/catch.hpp>
 #include <rbdyn/EulerIntegration.h>
 
-TEST_CASE("body", "[model][body]")
+TEST_CASE("body")
 {
     using namespace cdm;
     using v3_t = Eigen::Vector3d;
@@ -14,24 +14,24 @@ TEST_CASE("body", "[model][body]")
 
     {
         Inertia I{ vec(0), vec, mat };
-        Link b{ "name", I };
+        Body b{ "name", I };
         REQUIRE(b.name() == "name");
         REQUIRE(b.inertia() == I);
     }
     {
-        Link b{ "name", vec(0), vec, mat };
+        Body b{ "name", vec(0), vec, mat };
         REQUIRE(b.name() == "name");
         REQUIRE(b.inertia() == Inertia{ vec(0), vec, mat });
     }
     {
-        Link b1{ "name", vec(0), vec, mat };
-        Link b2{ "name", vec(2), vec, mat };
+        Body b1{ "name", vec(0), vec, mat };
+        Body b2{ "name", vec(2), vec, mat };
         REQUIRE(b1 == b2);
         REQUIRE(!(b1 != b2));
     }
 }
 
-TEST_CASE("joint", "[model][joint]")
+TEST_CASE("joint")
 {
     using namespace cdm;
     using v3_t = Eigen::Vector3d;
@@ -72,7 +72,7 @@ TEST_CASE("joint", "[model][joint]")
     }
 }
 
-TEST_CASE("model", "[model]")
+TEST_CASE("model")
 {
     using namespace cdm;
     using v3_t = Eigen::Vector3d;
@@ -86,9 +86,9 @@ TEST_CASE("model", "[model]")
     // j0|b0 --- j1|b1 -|                          //
     //                  \- j4|b4                   //
     /////////////////////////////////////////////////
-    std::vector<Link> bs;
+    std::vector<Body> bs;
     std::vector<Joint> js;
-    std::vector<Transform> A0;
+    std::vector<Transform> T0;
     std::vector<int> jointParents = { -1, 0, 1, 2, 1 };
     std::vector<int> jointChildren = { 0, 1, 2, 3, 4 };
     bs.emplace_back("b0", I);
@@ -102,11 +102,11 @@ TEST_CASE("model", "[model]")
     js.emplace_back("j3", Joint::Type::Fixed);
     js.emplace_back("j4", Joint::Type::Spherical);
     DISABLE_CONVERSION_WARNING_BEGIN
-    A0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
-    A0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
-    A0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
-    A0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
-    Transform ARoot{ Eigen::Quaterniond::UnitRandom(), v3_t::Random() };
+    T0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
+    T0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
+    T0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
+    T0.emplace_back(Eigen::Quaterniond::UnitRandom(), v3_t::Random());
+    Transform TRoot{ Eigen::Quaterniond::UnitRandom(), v3_t::Random() };
     DISABLE_CONVERSION_WARNING_END
 
     // Add in random order
@@ -116,14 +116,14 @@ TEST_CASE("model", "[model]")
     mc.addLink(js[2], bs[2]);
     mc.addLink(js[4], bs[4]);
     mc.addLink(js[0], bs[0]);
-    mc.link("b1", "j2", A0[1]);
-    mc.link("b2", "j3", A0[2]);
-    mc.link("b0", "j1", A0[0]);
-    mc.link("b1", "j4", A0[3]);
-    // REQUIRE_THROWS_AS(mc.link("b0", "j7", ARoot), std::runtime_error);
-    // REQUIRE_THROWS_AS(mc.link("b7", "j0", ARoot), std::runtime_error);
+    mc.connectLink("b1", "j2", T0[1]);
+    mc.connectLink("b2", "j3", T0[2]);
+    mc.connectLink("b0", "j1", T0[0]);
+    mc.connectLink("b1", "j4", T0[3]);
+    // REQUIRE_THROWS_AS(mc.body("b0", "j7", TRoot), std::runtime_error);
+    // REQUIRE_THROWS_AS(mc.body("b7", "j0", TRoot), std::runtime_error);
     // REQUIRE_THROWS_AS(mc.build("j7"), std::runtime_error);
-    auto model = mc.build("j0", ARoot);
+    auto model = mc.build("j0", TRoot);
 
     // checks
     REQUIRE(model.nLinks() == 5);
@@ -131,9 +131,9 @@ TEST_CASE("model", "[model]")
         REQUIRE(model.joint(i) == js[i]);
         REQUIRE(model.body(i) == bs[i]);
         if (i != 0) {
-            REQUIRE(model.A0(i) == A0[i - 1]);
+            REQUIRE(model.T0(i) == T0[i - 1]);
         } else {
-            REQUIRE(model.A0(i) == ARoot);
+            REQUIRE(model.T0(i) == TRoot);
         }
         REQUIRE(model.jointParent(i) == jointParents[i]);
         REQUIRE(model.jointChild(i) == jointChildren[i]);
@@ -143,10 +143,10 @@ TEST_CASE("model", "[model]")
     REQUIRE_THROWS_AS(model.jointChildAt(7), std::out_of_range);
     REQUIRE_THROWS_AS(model.jointAt(7), std::out_of_range);
     REQUIRE_THROWS_AS(model.bodyAt(7), std::out_of_range);
-    REQUIRE_THROWS_AS(model.A0At(7), std::out_of_range);
+    REQUIRE_THROWS_AS(model.T0At(7), std::out_of_range);
 }
 
-TEST_CASE("rbd model", "[model][rbd]")
+TEST_CASE("rbd model")
 {
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;
@@ -169,7 +169,7 @@ TEST_CASE("rbd model", "[model][rbd]")
         REQUIRE(model.body(i).inertia().inertia() == mb.body(i).inertia().inertia());
         REQUIRE(model.jointPosInParam(i) == mb.jointPosInParam(i));
         REQUIRE(model.jointPosInDof(i) == mb.jointPosInDof(i));
-        REQUIRE(model.A0(i).translation() == mb.transform(i).translation());
-        REQUIRE(model.A0(i).rotation().isApprox(mb.transform(i).rotation().transpose()));
+        REQUIRE(model.T0(i).translation() == mb.transform(i).translation());
+        REQUIRE(model.T0(i).rotation().isApprox(mb.transform(i).rotation().transpose()));
     }
 }

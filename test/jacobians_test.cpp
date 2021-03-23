@@ -1,7 +1,7 @@
 #include "SimpleHumanModel.hpp"
+#include "doctest/doctest.h"
 #include "macros.hpp"
 #include "model_generation.hpp"
-#include <catch2/catch.hpp>
 #include <cdm/Core>
 #include <rbdyn/FA.h>
 #include <rbdyn/FD.h>
@@ -19,7 +19,7 @@ struct DynamicOrder {
 };
 
 template <int Order>
-Eigen::VectorXd GetAleph(const Model& m, const ModelConfig<Order>& mc, int t)
+Eigen::VectorXd GetAleph(const Model& m, const ModelConfig<Order>& mc)
 {
     const int ord = mc.world.order();
     const auto& pos = m.jointPosInDof();

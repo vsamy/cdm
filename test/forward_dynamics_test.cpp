@@ -1,10 +1,10 @@
 #include "SimpleHumanModel.hpp"
+#include "doctest/doctest.h"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <cdm/FD.hpp>
 #include <cdm/FK.hpp>
 #include <cdm/ID.hpp>
-#include <cdm/FD.hpp>
-#include <catch2/catch.hpp>
 #include <rbdyn/FA.h>
 #include <rbdyn/FD.h>
 #include <rbdyn/FK.h>
@@ -21,10 +21,10 @@ struct DynamicOrder {
 };
 
 // TODO: this does not test dynamic currently
-TEMPLATE_TEST_CASE("FD", "[FD]", FixedOrder, DynamicOrder)
+TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
 {
     using Index = cdm::Index;
-    constexpr int order = FixedOrder::order;
+    constexpr int order = T::order;
 
     rbd::MultiBody mb;
     rbd::MultiBodyConfig mbc;

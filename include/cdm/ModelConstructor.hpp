@@ -4,8 +4,8 @@
 
 namespace cdm {
 
-/*! \brief Class to construct a model from link and joint connections
- * Providing a set of links and connecting them together will allow the class to generate the model.
+/*! \brief Class to construct a model from body and joint connections
+ * Providing a set of bodies and connecting them together will allow the class to generate the model.
  * Only availablefor open kinematic chain. Closed loop will not work.s
  */
 class CDM_DLLAPI ModelConstructor {
@@ -13,17 +13,17 @@ public:
     /*! \brief Default constructor. */
     ModelConstructor() = default;
 
-    /*! \brief Add a link connected to a joint to the model.
+    /*! \brief Add a body connected to a joint to the model.
      * \param joint New joint.
-     * \param link Successor link of the joint.
+     * \param body Successor body of the joint.
      */
-    void addPair(const Joint& joint, const Link& link);
+    void addLink(const Joint& joint, const Body& body);
     /*! \brief Connect a lin
-     * \param linkName Name of the link to connect.
-     * \param nextJointName Joint connected to the link (link becomes a predecessor of the joint).
-     * \param T_l_j Transformation from the joint to the link \f${^l}T_j\f$.
+     * \param linkName Name of the body to connect.
+     * \param nextJointName Joint connected to the body (body becomes a predecessor of the joint).
+     * \param T_l_j Transformation from the joint to the body \f${^l}T_j\f$.
      */
-    void connect(const std::string& linkName, const std::string& nextJointName, const Transform& T_l_j);
+    void connectLink(const std::string& bodyLinkName, const std::string& nextJointName, const Transform& T_l_j);
     /*! \brief Build the model.
      * \param rootName Name of the root joint.
      * \param T_w_r Transformation from root to world \f${^w}T_r\f$. Default is the identity.
@@ -32,10 +32,10 @@ public:
     Model build(const std::string& rootName, const Transform& T_w_r = Transform::Identity()) const;
 
 private:
-    /*! \brief Link basic information */
+    /*! \brief Body basic information */
     struct LinkBase {
-        Link link; /*!< Link */
-        std::vector<std::pair<Index, Transform>> next; /*!< Link successor indices */
+        Body body; /*!< Body */
+        std::vector<std::pair<Index, Transform>> next; /*!< Body successor indices */
     };
     struct JointBase {
         Joint joint; /*!< Joint */
@@ -43,10 +43,10 @@ private:
     };
 
 private:
-    std::vector<LinkBase> m_linkBases; /*!< Link basic information */
+    std::vector<LinkBase> m_bodyBases; /*!< Body basic information */
     std::vector<JointBase> m_jointBases; /*!< Joint basic information */
     std::unordered_map<std::string, Index> m_jointIndexFromName; /*!< Joint index from name */
-    std::unordered_map<std::string, Index> m_linkIndexFromName; /*!< Link index from name */
+    std::unordered_map<std::string, Index> m_bodyIndexFromName; /*!< Body index from name */
 };
 
 } // namespace cdm

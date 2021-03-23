@@ -17,9 +17,9 @@ void FK(const Model& m, ModelConfig<Order>& mc)
     // TODO: Bench with inverse
     for (Index i = 0; i < m.nLinks(); ++i) {
         if (parents[i] != -1) {
-            mc.LinkMotions[i] = mc.LinkMotions[parents[i]] * mc.jointMotions[i];
+            mc.bodyMotions[i] = mc.bodyMotions[parents[i]] * mc.jointMotions[i];
         } else {
-            mc.LinkMotions[i] = mc.world * mc.jointMotions[i];
+            mc.bodyMotions[i] = mc.world * mc.jointMotions[i];
         }
     }
 }

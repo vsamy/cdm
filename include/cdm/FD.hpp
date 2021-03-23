@@ -16,9 +16,9 @@ template <int NBlock>
 Eigen::MatrixXd makeDiag(const Eigen::MatrixXd& blockMat)
 {
     constexpr int N = NBlock;
-    Eigen::MatrixXd out = Eigen::MatrixXd::Zero(N * mat.rows(), N * mat.cols());
+    Eigen::MatrixXd out = Eigen::MatrixXd::Zero(N * blockMat.rows(), N * blockMat.cols());
     for (int i = 0; i < N; ++i)
-        out.block(i * mat.rows(), i * mat.cols(), mat.rows(), mat.cols()) = mat;
+        out.block(i * blockMat.rows(), i * blockMat.cols(), blockMat.rows(), blockMat.cols()) = blockMat;
 
     return out;
 }
@@ -34,7 +34,7 @@ template <int Order>
 std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, const std::vector<Eigen::VectorXd>& tau)
 {
     constexpr int ord = Order;
-    const auto& parents = m.jointParents();
+    const auto& parent = m.jointParents();
 
     std::vector<Eigen::MatrixXd> C(m.nLinks());
     std::vector<Eigen::MatrixXd> CD(m.nLinks());
@@ -47,33 +47,33 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
     std::vector<Eigen::VectorXd> T(m.nLinks());
     std::vector<Eigen::VectorXd> y(m.nLinks());
 
-    for (int i = 0; i < mb.nrBodies(); ++i) {
+    for (Index i = 0; i < m.nLinks(); ++i) {
         C[i] = mc.jointMotions[i].inverse().template matrix<ord>();
         CD[i] = mc.jointMotions[i].template dualMatrix<ord>();
-        G[i] = makeDiag<ord>(m.joint(i).S());
+        G[i] = makeDiag<ord>(m.joint(i).S().matrix());
         IA[i].setZero(6 * ord, 6 * ord);
         PA[i].setZero(6 * ord);
     }
 
-    for (int i = m.nLinks() - 1; i >= 0; --i) {
+    for (Index i = m.nLinks() - 1; i >= 0; --i) {
         IA[i] += makeDiag<ord>(m.body(i).inertia().matrix());
         U[i] = IA[i] * G[i];
         UD[i] = G[i].transpose() * IA[i];
         D[i] = G[i].transpose() * U[i];
 
-        y[i] = D[i].inverse() * (Tau[i] - G[i].transpose() * PA[i]);
-        if (pred[i] != -1) {
+        y[i] = D[i].inverse() * (tau[i] - G[i].transpose() * PA[i]);
+        if (parent[i] != -1) {
             auto tmp1 = IA[i] - U[i] * D[i].inverse() * UD[i];
-            IA[pred[i]] += CD[i] * tmp1 * C[i];
+            IA[parent[i]] += CD[i] * tmp1 * C[i];
             auto tmp2 = PA[i] + U[i] * y[i];
-            PA[pred[i]] += CD[i] * tmp2;
+            PA[parent[i]] += CD[i] * tmp2;
         }
     }
 
     T[0] = G[0] * y[0];
-    for (int i = 1; i < m.nLinks(); ++i) {
-        y[i] -= D[i].inverse() * UD[i] * C[i] * T[pred[i]];
-        T[i] = G[i] * y[i] + C[i] * T[pred[i]];
+    for (Index i = 1; i < m.nLinks(); ++i) {
+        y[i] -= D[i].inverse() * UD[i] * C[i] * T[parent[i]];
+        T[i] = G[i] * y[i] + C[i] * T[parent[i]];
     }
 
     return y;
@@ -163,7 +163,7 @@ std::vector<Eigen::VectorXd> FD(const Model& m, const ModelConfig<Order>& mc, co
 template <int Order>
 Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const Eigen::VectorXd& tau)
 {
-    const auto& parents = m.jointParents();
+    const auto& parent = m.jointParents();
     const auto& jpd = m.jointPosInDof();
 
     std::vector<Eigen::Vector6d> PA(m.nLinks());
@@ -188,19 +188,19 @@ Eigen::VectorXd standardFD(const Model& m, ModelConfig<Order>& mc, const Eigen::
         D[i] = S.transpose() * U[i];
 
         y.segment(jpd[i], dof) = D[i].inverse() * (tau.segment(jpd[i], dof) - S.transpose() * PA[i]);
-        if (parents[i] != -1) {
+        if (parent[i] != -1) {
             auto tmp1 = IA[i] - U[i] * D[i].inverse() * U[i].transpose();
-            IA[parents[i]] += A[i].transpose() * tmp1 * A[i];
+            IA[parent[i]] += A[i].transpose() * tmp1 * A[i];
             auto tmp2 = PA[i] + U[i] * y.segment(jpd[i], dof);
-            PA[parents[i]] += A[i].transpose() * tmp2;
+            PA[parent[i]] += A[i].transpose() * tmp2;
         }
     }
 
-    T[0] = m.joint(0).S().matrix() * y.segment(jpd[0], dof);
+    T[0] = m.joint(0).S().matrix() * y.segment(jpd[0], m.joint(0).dof());
     for (Index i = 1; i < m.nLinks(); ++i) {
         Index dof = m.joint(i).dof();
-        y.segment(jpd[i], dof) -= D[i].inverse() * U[i].transpose() * A[i] * T[parents[i]];
-        T[i] = m.joint(i).S().matrix() * y.segment(jpd[i], dof) + A[i] * T[parents[i]];
+        y.segment(jpd[i], dof) -= D[i].inverse() * U[i].transpose() * A[i] * T[parent[i]];
+        T[i] = m.joint(i).S().matrix() * y.segment(jpd[i], dof) + A[i] * T[parent[i]];
     }
 
     return y;

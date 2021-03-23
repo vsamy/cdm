@@ -86,12 +86,12 @@ void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyCo
 template <int Order>
 void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Order>& mc)
 {
-    mc.LinkMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
+    mc.bodyMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
     mc.jointMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
     mc.jointMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
     mc.jointForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.linkMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.linkForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.bodyMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.bodyForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
     mc.jointTorques.resize(m.nLinks(), Eigen::VectorXd(m.nDof()));
     mc.q = data.q[data.curData];
     mc.dqs = data.dqs[data.curData];
@@ -113,7 +113,7 @@ void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Orde
         }
 
         auto& jm = mc.jointMotions[i];
-        jm.transform() = m.A0(i) * dA;
+        jm.transform() = m.T0(i) * dA;
         for (cdm::Index n = 0; n < data.order; ++n) {
             jm.motion()[n] = m.joint(i).S() * mc.dqs.col(n).segment(m.jointPosInDof(i), m.joint(i).dof());
         }

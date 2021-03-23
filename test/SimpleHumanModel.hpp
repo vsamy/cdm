@@ -8,18 +8,16 @@
 #include <tuple>
 
 // RBDyn
+#include <rbdyn/Body.h>
 #include <rbdyn/Joint.h>
-#include <rbdyn/Link.h>
 #include <rbdyn/MultiBody.h>
 #include <rbdyn/MultiBodyConfig.h>
 #include <rbdyn/MultiBodyGraph.h>
 
 namespace rbd {
 
-void createLeg(MultiBodyGraph& mbg,
-    const Eigen::Vector3d& direction,
-    const std::string& parentName,
-    const std::string& prefix)
+void createLeg(MultiBodyGraph& mbg, const Eigen::Vector3d& direction,
+    const std::string& parentName, const std::string& prefix)
 {
     using namespace Eigen;
     using namespace sva;
@@ -47,10 +45,8 @@ void createLeg(MultiBodyGraph& mbg,
     mbg.linkBodies(prefix + "LEG1", to, prefix + "LEG2", from, prefix + "LEG1_2");
 }
 
-void createArm(MultiBodyGraph& mbg,
-    const Eigen::Vector3d& direction,
-    const std::string& parentName,
-    const std::string& prefix)
+void createArm(MultiBodyGraph& mbg, const Eigen::Vector3d& direction,
+    const std::string& parentName, const std::string& prefix)
 {
     using namespace Eigen;
     using namespace sva;
@@ -131,10 +127,8 @@ std::tuple<MultiBody, MultiBodyConfig, MultiBodyGraph> makeHumanBody()
 
 namespace cdm {
 
-void createLeg(ModelConstructor& mc,
-    const Eigen::Vector3d& direction,
-    const std::string& parentName,
-    const std::string& prefix)
+void createLeg(ModelConstructor& mc, const Eigen::Vector3d& direction,
+    const std::string& parentName, const std::string& prefix)
 {
     using m3_t = Eigen::Matrix3d;
     using v3_t = Eigen::Vector3d;
@@ -149,15 +143,13 @@ void createLeg(ModelConstructor& mc,
     mc.addLink({ prefix + "LEG1_2", Joint::Type::Spherical }, { prefix + "LEG2", si });
 
     Transform to{ I, direction };
-    mc.link(parentName, prefix + "LEGBASE_0", to);
-    mc.link(prefix + "LEG0", prefix + "LEG0_1", to);
-    mc.link(prefix + "LEG1", prefix + "LEG1_2", to);
+    mc.connectLink(parentName, prefix + "LEGBASE_0", to);
+    mc.connectLink(prefix + "LEG0", prefix + "LEG0_1", to);
+    mc.connectLink(prefix + "LEG1", prefix + "LEG1_2", to);
 }
 
-void createArm(ModelConstructor& mc,
-    const Eigen::Vector3d& direction,
-    const std::string& parentName,
-    const std::string& prefix)
+void createArm(ModelConstructor& mc, const Eigen::Vector3d& direction,
+    const std::string& parentName, const std::string& prefix)
 {
     using m3_t = Eigen::Matrix3d;
     using v3_t = Eigen::Vector3d;
@@ -172,9 +164,9 @@ void createArm(ModelConstructor& mc,
     mc.addLink({ prefix + "ARM1_2", Joint::Type::Spherical }, { prefix + "ARM2", si });
 
     Transform to{ I, direction };
-    mc.link(parentName, prefix + "ARMBASE_0", to);
-    mc.link(prefix + "ARM0", prefix + "ARM0_1", to);
-    mc.link(prefix + "ARM1", prefix + "ARM1_2", to);
+    mc.connectLink(parentName, prefix + "ARMBASE_0", to);
+    mc.connectLink(prefix + "ARM0", prefix + "ARM0_1", to);
+    mc.connectLink(prefix + "ARM1", prefix + "ARM1_2", to);
 }
 
 Model makeHumanBody()
@@ -196,10 +188,10 @@ Model makeHumanBody()
     mc.addLink({ "HEAD0_HEAD1", Joint::Type::Revolute, v3_t::UnitX() }, { "HEAD1", si });
 
     Transform to(I, v3_t(0., 0.1, 0.));
-    mc.link("BODY0", "BODY0_BODY1", to);
-    mc.link("BODY1", "BODY1_TORSO", to);
-    mc.link("TORSO", "TORSO_HEAD0", to);
-    mc.link("HEAD0", "HEAD0_HEAD1", to);
+    mc.connectLink("BODY0", "BODY0_BODY1", to);
+    mc.connectLink("BODY1", "BODY1_TORSO", to);
+    mc.connectLink("TORSO", "TORSO_HEAD0", to);
+    mc.connectLink("HEAD0", "HEAD0_HEAD1", to);
 
     // left arm
     createArm(mc, v3_t(-0.1, 0.05, 0.), "TORSO", "L");
