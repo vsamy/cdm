@@ -1,29 +1,29 @@
 #pragma once
 
-#include "JointMomentumJacobian.hpp"
+#include "cdm/JointMomentumJacobian.hpp"
 
-template <typename MI, typename Tree>
-Eigen::MatrixXd JointForceJacobian(const std::string& bodyName, MI& info, Tree& tree)
+namespace cdm {
+
+template <int Order>
+Eigen::MatrixXd JointForceJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    constexpr int ord = Tree::order;
-    const auto& mb = info.model.mb;
-    int j = mb.bodyIndexByName(bodyName);
-    auto D = generateD(coma::CrossNd<ord>{ tree.bodies[j].motion() });
-    return D * JointMomentumJacobian(bodyName, info, tree);
+    Index j = m.bodyIndexByName(bodyName);
+    auto D = generateD(CrossNd<Order>{ mc.bodyMotions[j].motion() });
+    return D * JointMomentumJacobian(m, mc, bodyName);
 }
 
-template <int JacOrder, typename MI, typename Tree>
-Eigen::MatrixXd JointForceJacobianOfOrder(const std::string& bodyName, MI& info, Tree& tree)
+template <int Order, int JacOrder>
+Eigen::MatrixXd JointForceJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    constexpr int jac_ord = JacOrder;
-    if constexpr (jac_ord == 0) {
-        return JointMomentumJacobianOfOrder<jac_ord>(bodyName, info, tree);
+    if constexpr (JacOrder == 0) {
+        return JointMomentumJacobianOfOrder<JacOrder>(m, mc, bodyName);
     } else {
-        const auto& mb = info.model.mb;
-        int j = mb.bodyIndexByName(bodyName);
-        coma::CrossNd<jac_ord> cx{ tree.bodies[j].motion() };
-        Eigen::MatrixXd D = cx.matrix().middleRows<6 * jac_ord>(6 * (jac_ord - 1)) / jac_ord;
-        D.middleCols<6>(6 * jac_ord).setIdentity();
-        return D * JointMomentumJacobianOfOrder<jac_ord>(bodyName, info, tree);
+        Index j = m.bodyIndexByName(bodyName);
+        CrossNd<JacOrder> cx{ tree.bodies[j].motion() };
+        Eigen::MatrixXd D = cx.matrix().middleRows<6 * JacOrder>(6 * (JacOrder - 1)) / static_cast<double>(JacOrder); // TODO: Should be Scalar
+        D.middleCols<6>(6 * JacOrder).setIdentity();
+        return D * JointMomentumJacobianOfOrder<JacOrder>(m, mc, bodyName);
     }
 }
+
+} // namespace cdm

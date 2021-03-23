@@ -1,22 +1,22 @@
 #pragma once
 
-#include "MotionJacobian.hpp"
-#include "utils.hpp"
+#include "cdm/BasicJacobian.hpp"
+#include "cdm/math_utility.hpp"
 
-template <typename MI, typename Tree>
-Eigen::MatrixXd LinkMomentumJacobian(const std::string& bodyName, MI& info, Tree& tree)
+namespace cdm {
+
+template <int Order>
+Eigen::MatrixXd LinkMomentumJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    constexpr int ord = Tree::order;
-    const auto& mb = info.model.mb;
-    auto I = makeDiag<ord>(mb.body(mb.bodyIndexByName(bodyName)).inertia().matrix()); // \tilde{I} = diag(I)
-    return I * MotionJacobian(bodyName, info, tree);
+    auto I = makeDiag<Order>(m.body(mb.bodyIndexByName(bodyName)).inertia().matrix()); // \tilde{I} = diag(I)
+    return I * BasicJacobian<Order>(m, mc, bodyName);
 }
 
-template <int JacOrder, typename MI, typename Tree>
-Eigen::MatrixXd LinkMomentumJacobianOfOrder(const std::string& bodyName, MI& info, Tree& tree)
+template <int Order, int JacOrder>
+Eigen::MatrixXd LinkMomentumJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    constexpr int jac_ord = JacOrder;
-    const auto& mb = info.model.mb;
-    int j = mb.bodyIndexByName(bodyName);
-    return mb.body(j).inertia().matrix() * MotionJacobianOfOrder<jac_ord>(bodyName, info, tree);
+    Index j = m.bodyIndexByName(bodyName);
+    return m.body(j).inertia().matrix() * BasicJacobianOfOrder<JacOrder>(m, mc, bodyName);
 }
+
+} // namespace cdm

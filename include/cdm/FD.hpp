@@ -7,22 +7,6 @@
 
 namespace cdm {
 
-/*! \brief Generate a block diagonal matrix.
- * \tparam NBlock Number of the block of the matrix.
- * \param blockMat Block matrix to repeat.
- * \return Block diagonal matrix.
- */
-template <int NBlock>
-Eigen::MatrixXd makeDiag(const Eigen::MatrixXd& blockMat)
-{
-    constexpr int N = NBlock;
-    Eigen::MatrixXd out = Eigen::MatrixXd::Zero(N * blockMat.rows(), N * blockMat.cols());
-    for (int i = 0; i < N; ++i)
-        out.block(i * blockMat.rows(), i * blockMat.cols(), blockMat.rows(), blockMat.cols()) = blockMat;
-
-    return out;
-}
-
 /*! \brief Comprehensive Forward Dynamics.
  * This computes all motion information given comprehensive generalized momentums.
  * \tparam Order Orde of the model.
