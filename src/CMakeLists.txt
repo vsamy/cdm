@@ -1,6 +1,6 @@
 
 set(SRC 
-    Body.cpp
+    Link.cpp
     Joint.cpp
     Model.cpp
     ModelConstructor.cpp
@@ -9,7 +9,7 @@ set(SRC
 set(HEADERS 
     ${PROJECT_NAME}/Core
     ${PROJECT_NAME}/API.hpp
-    ${PROJECT_NAME}/Body.hpp
+    ${PROJECT_NAME}/Link.hpp
     ${PROJECT_NAME}/FD.hpp
     ${PROJECT_NAME}/FK.hpp
     ${PROJECT_NAME}/ID.hpp

@@ -1,8 +1,8 @@
 #include "SimpleHumanModel.hpp"
 #include "macros.hpp"
 #include "model_generation.hpp"
-#include <cdm/FK.hpp>
 #include <catch2/catch.hpp>
+#include <cdm/FK.hpp>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
@@ -57,9 +57,9 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
     auto linkWorldInv = mc1.world.inverse();
     double prec = coma::dummy_precision<double>();
     for (cdm::Index i = 0; i < mb.nrJoints(); ++i) {
-        auto linkMotions = (linkWorldInv * mc1.bodyMotions[i]).motion();
-        REQUIRE((mbc.bodyPosW[i].translation() - mc1.bodyMotions[i].transform().translation()).norm() < prec);
-        REQUIRE((mbc.bodyPosW[i].rotation().transpose() - mc1.bodyMotions[i].transform().rotation()).norm() < prec);
+        auto linkMotions = (linkWorldInv * mc1.LinkMotions[i]).motion();
+        REQUIRE((mbc.bodyPosW[i].translation() - mc1.LinkMotions[i].transform().translation()).norm() < prec);
+        REQUIRE((mbc.bodyPosW[i].rotation().transpose() - mc1.LinkMotions[i].transform().rotation()).norm() < prec);
         REQUIRE((mbc.bodyVelB[i].vector() - linkMotions[0].vector()).norm() < prec);
         REQUIRE((mbc.bodyAccB[i].vector() - linkMotions[1].vector()).norm() < prec);
     }
@@ -71,8 +71,8 @@ TEMPLATE_TEST_CASE("FK", "[FK]", FixedOrder, DynamicOrder)
 
     // Numerical check
     for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
-        auto m1 = (linkWorldInv * mc1.bodyMotions[i]).motion();
-        auto m2 = (linkWorldInv * mc2.bodyMotions[i]).motion();
+        auto m1 = (linkWorldInv * mc1.LinkMotions[i]).motion();
+        auto m2 = (linkWorldInv * mc2.LinkMotions[i]).motion();
         auto dV = (m2 - m1) / dt;
         for (cdm::Index n = 0; n < order - 1; ++n) {
             REQUIRE((dV[n] - m2[n + 1]).vector().norm() < dt * 1000.);

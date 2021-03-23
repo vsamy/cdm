@@ -3,14 +3,13 @@
 // #include <cdm/Core>
 #include <cdm/ModelConstructor.hpp>
 
-
 // includes
 // std
 #include <tuple>
 
 // RBDyn
-#include <rbdyn/Body.h>
 #include <rbdyn/Joint.h>
+#include <rbdyn/Link.h>
 #include <rbdyn/MultiBody.h>
 #include <rbdyn/MultiBodyConfig.h>
 #include <rbdyn/MultiBodyGraph.h>

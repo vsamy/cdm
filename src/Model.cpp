@@ -2,21 +2,21 @@
 
 namespace cdm {
 
-Model::Model(std::vector<Joint> joints, std::vector<Body> bodies, std::vector<Index> jointParents,
-    std::vector<Index> jointChilds, std::vector<Transform> A0)
+Model::Model(std::vector<Joint> joints, std::vector<Link> links, std::vector<Index> jointParents,
+    std::vector<Index> jointChilds, std::vector<Transform> T0)
     : m_nLinks(static_cast<Index>(joints.size()))
     , m_nParam(0)
     , m_nDof(0)
     , m_joints(std::move(joints))
-    , m_bodies(std::move(bodies))
+    , m_links(std::move(links))
     , m_jointParents(std::move(jointParents))
     , m_jointChilds(std::move(jointChilds))
-    , m_A0(std::move(A0))
+    , m_T0(std::move(T0))
     , m_jointPosInParam(m_nLinks)
     , m_jointPosInDof(m_nLinks)
 {
     for (Index i = 0; i < m_nLinks; ++i) {
-        m_bodyIndexByName[m_bodies[i].name()] = i;
+        m_bodyIndexByName[m_links[i].name()] = i;
         m_jointIndexByName[m_joints[i].name()] = i;
         m_jointPosInParam[i] = m_nParam;
         m_jointPosInDof[i] = m_nDof;
@@ -80,24 +80,24 @@ const Joint& Model::jointAt(Index jointIndex) const
     return m_joints.at(jointIndex);
 }
 
-const Body& Model::body(Index bodyIndex) const noexcept
+const Link& Model::body(Index linkIndex) const noexcept
 {
-    return m_bodies[bodyIndex];
+    return m_links[linkIndex];
 }
 
-const Body& Model::bodyAt(Index bodyIndex) const
+const Link& Model::bodyAt(Index linkIndex) const
 {
-    return m_bodies.at(bodyIndex);
+    return m_links.at(linkIndex);
 }
 
-const Transform& Model::A0(Index linkIndex) const noexcept
+const Transform& Model::T0(Index jointIndex) const noexcept
 {
-    return m_A0[linkIndex];
+    return m_T0[jointIndex];
 }
 
-const Transform& Model::A0At(Index linkIndex) const
+const Transform& Model::T0At(Index jointIndex) const
 {
-    return m_A0.at(linkIndex);
+    return m_T0.at(jointIndex);
 }
 
 const std::vector<Joint>& Model::joints() const noexcept
@@ -105,9 +105,9 @@ const std::vector<Joint>& Model::joints() const noexcept
     return m_joints;
 }
 
-const std::vector<Body>& Model::bodies() const noexcept
+const std::vector<Link>& Model::links() const noexcept
 {
-    return m_bodies;
+    return m_links;
 }
 
 const std::vector<Index>& Model::jointParents() const noexcept
@@ -130,9 +130,9 @@ const std::vector<Index>& Model::jointPosInDof() const noexcept
     return m_jointPosInDof;
 }
 
-const std::vector<Transform>& Model::A0s() const noexcept
+const std::vector<Transform>& Model::T0s() const noexcept
 {
-    return m_A0;
+    return m_T0;
 }
 
 } // namespace cdm

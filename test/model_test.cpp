@@ -14,18 +14,18 @@ TEST_CASE("body", "[model][body]")
 
     {
         Inertia I{ vec(0), vec, mat };
-        Body b{ "name", I };
+        Link b{ "name", I };
         REQUIRE(b.name() == "name");
         REQUIRE(b.inertia() == I);
     }
     {
-        Body b{ "name", vec(0), vec, mat };
+        Link b{ "name", vec(0), vec, mat };
         REQUIRE(b.name() == "name");
         REQUIRE(b.inertia() == Inertia{ vec(0), vec, mat });
     }
     {
-        Body b1{ "name", vec(0), vec, mat };
-        Body b2{ "name", vec(2), vec, mat };
+        Link b1{ "name", vec(0), vec, mat };
+        Link b2{ "name", vec(2), vec, mat };
         REQUIRE(b1 == b2);
         REQUIRE(!(b1 != b2));
     }
@@ -86,7 +86,7 @@ TEST_CASE("model", "[model]")
     // j0|b0 --- j1|b1 -|                          //
     //                  \- j4|b4                   //
     /////////////////////////////////////////////////
-    std::vector<Body> bs;
+    std::vector<Link> bs;
     std::vector<Joint> js;
     std::vector<Transform> A0;
     std::vector<int> jointParents = { -1, 0, 1, 2, 1 };

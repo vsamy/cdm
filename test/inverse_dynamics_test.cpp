@@ -1,9 +1,9 @@
 #include "SimpleHumanModel.hpp"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <catch2/catch.hpp>
 #include <cdm/FK.hpp>
 #include <cdm/ID.hpp>
-#include <catch2/catch.hpp>
 #include <rbdyn/FA.h>
 #include <rbdyn/FK.h>
 #include <rbdyn/FV.h>
@@ -61,14 +61,14 @@ void test_id(bool withGravity)
         int dof = mb.joint(i).dof();
         // First momentum and force (=momentum)
         auto f1 = mb.body(i).inertia() * mbc.bodyVelB[i];
-        REQUIRE((f1.vector() - mc1.bodyMomentums[i][0].vector()).norm() < prec);
-        REQUIRE((f1.vector() - mc1.bodyForces[i][0].vector()).norm() < prec);
+        REQUIRE((f1.vector() - mc1.linkMomentums[i][0].vector()).norm() < prec);
+        REQUIRE((f1.vector() - mc1.linkForces[i][0].vector()).norm() < prec);
         // Momentum derivative
         auto f2 = mb.body(i).inertia() * mbc.bodyAccB[i];
-        REQUIRE((f2.vector() - mc1.bodyMomentums[i][1].vector()).norm() < prec);
+        REQUIRE((f2.vector() - mc1.linkMomentums[i][1].vector()).norm() < prec);
         // force
         f2 += mbc.bodyVelB[i].crossDual(f1);
-        REQUIRE((f2.vector() - mc1.bodyForces[i][1].vector()).norm() < prec);
+        REQUIRE((f2.vector() - mc1.linkForces[i][1].vector()).norm() < prec);
         REQUIRE((id.f()[i].vector() - mc1.jointForces[i][1].vector()).norm() < prec);
         // Torque
         REQUIRE((tau.segment(posInDof, dof) - mc1.jointTorques[i].segment(dof, dof)).norm() < prec);
@@ -84,17 +84,17 @@ void test_id(bool withGravity)
     // Please remember that here the 0-order force is the momentum and f[1] corresponds to the classical force so f[0] == p[0]
     // And we have df[0]/dt == dp[0]/dt == p[1], thus df[0]/dt != f[1] (the numerical derivative of f[0] is p[1] and not f[1])
     for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
-        auto dlP = (mc2.bodyMomentums[i] - mc1.bodyMomentums[i]) / dt;
-        auto dlF = (mc2.bodyForces[i] - mc1.bodyForces[i]) / dt;
+        auto dlP = (mc2.linkMomentums[i] - mc1.linkMomentums[i]) / dt;
+        auto dlF = (mc2.linkForces[i] - mc1.linkForces[i]) / dt;
         auto djP = (mc2.jointMomentums[i] - mc1.jointMomentums[i]) / dt;
         auto djF = (mc2.jointForces[i] - mc1.jointForces[i]) / dt;
         for (cdm::Index n = 0; n < FixedOrder::order - 1; ++n) {
             if (!withGravity) {
-                REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
+                REQUIRE((dlP[n] - mc2.linkMomentums[i][n + 1]).vector().norm() < dt * 1000.);
                 REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
             }
             if (n != 0) {
-                REQUIRE((dlF[n] - mc2.bodyForces[i][n + 1]).vector().norm() < dt * 10000.);
+                REQUIRE((dlF[n] - mc2.linkForces[i][n + 1]).vector().norm() < dt * 10000.);
                 REQUIRE((djF[n] - mc2.jointForces[i][n + 1]).vector().norm() < dt * 10000.);
             }
         }

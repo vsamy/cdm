@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cdm/typedefs.hpp>
 #include <cdm/ModelConfig.hpp>
+#include <cdm/typedefs.hpp>
 #include <rbdyn/EulerIntegration.h>
 #include <rbdyn/MultiBody.h>
 #include <rbdyn/MultiBodyConfig.h>
@@ -86,12 +86,12 @@ void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyCo
 template <int Order>
 void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Order>& mc)
 {
-    mc.bodyMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
+    mc.LinkMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
     mc.jointMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
     mc.jointMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
     mc.jointForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.bodyMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.bodyForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.linkMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
+    mc.linkForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
     mc.jointTorques.resize(m.nLinks(), Eigen::VectorXd(m.nDof()));
     mc.q = data.q[data.curData];
     mc.dqs = data.dqs[data.curData];
