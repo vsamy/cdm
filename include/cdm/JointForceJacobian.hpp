@@ -8,11 +8,11 @@ template <int Order>
 Eigen::MatrixXd JointForceJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
     Index j = m.bodyIndexByName(bodyName);
-    auto D = generateD(CrossNd<Order>{ mc.bodyMotions[j].motion() });
+    auto D = generateD(cdm::CrossN<Order>{ mc.bodyMotions[j].motion() });
     return D * JointMomentumJacobian(m, mc, bodyName);
 }
 
-template <int Order, int JacOrder>
+template <int JacOrder, int Order>
 Eigen::MatrixXd JointForceJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
     if constexpr (JacOrder == 0) {

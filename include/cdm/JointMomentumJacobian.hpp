@@ -7,7 +7,8 @@ namespace cdm {
 template <int Order>
 Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    const auto& posInDof = m.jointsPosInDof();
+    const auto& posInDof = m.jointPosInDof();
+    const auto& parents = m.jointParents();
     Index bInd = m.bodyIndexByName(bodyName);
     auto C_b_0 = mc.bodyMotions[bInd].inverse();
     // Get p part
@@ -15,15 +16,14 @@ Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& 
     auto M = getSubTreeInertia(m, mc);
     Index j = bInd;
     while (j != -1) {
-        auto G = makeDiag<Order>(mb.joint(j).motionSubspace()); // G = diag(S)
+        auto G = makeDiag<Order>(m.joint(j).S().matrix()); // G = diag(S)
         B.block(0, Order * posInDof[j], 6 * Order, G.cols()) = M[bInd] * (C_b_0 * mc.bodyMotions[j]).template matrix<Order>() * G;
-        j = pred[j];
+        j = parents[j];
     }
 
-    auto findChildren = [&m](Index b) {
-        const auto& parents = m.parents();
+    auto findChildren = [&parents, nLink = m.nLinks()](Index b) {
         std::vector<Index> children;
-        for (Index i = b + 1; i < mb.nLinks(); ++i) {
+        for (Index i = b + 1; i < nLink; ++i) {
             if (parents[i] == b)
                 children.push_back(i);
         }
@@ -34,11 +34,11 @@ Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& 
     // Compute \sum Cd * p part
     std::function<void(const Model& m, const std::vector<Index>&)> computeChildMomentumsAndAdd;
     computeChildMomentumsAndAdd = [&, M](const Model& m, const std::vector<Index>& children) {
-        const auto& posInDof = m.jointsPosInDof();
-        for (int c : children) {
+        const auto& posInDof = m.jointPosInDof();
+        for (auto c : children) {
             auto C_b_c = C_b_0 * mc.bodyMotions[c];
-            auto G = makeDiag<Order>(m.joint(c).S());
-            B.block(0, Order * posInDof[c], 6 * Order, G.cols()) = C_b_c.template dualMatrix<ord>() * M[c] * G;
+            auto G = makeDiag<Order>(m.joint(c).S().matrix());
+            B.block(0, Order * posInDof[c], 6 * Order, G.cols()) = C_b_c.template dualMatrix<Order>() * M[c] * G;
 
             computeChildMomentumsAndAdd(m, findChildren(c));
         }
@@ -48,7 +48,7 @@ Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& 
     return B;
 }
 
-template <int Order, int JacOrder>
+template <int JacOrder, int Order>
 Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
     std::vector<Eigen::Matrix6d> M(m.nLinks(), Eigen::Matrix6d::Zero());

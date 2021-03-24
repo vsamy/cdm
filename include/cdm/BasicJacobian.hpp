@@ -9,41 +9,44 @@ template <int Order>
 Eigen::MatrixXd BasicJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
     static_assert(Order >= 0, "Not yet ready for Dynamic");
-    const auto& parents = m.parents();
-    const auto& posInDof = m.jointsPosInDof();
-    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6 * order, m.nDof() * order);
+    const auto& parents = m.jointParents();
+    const auto& posInDof = m.jointPosInDof();
+    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6 * Order, m.nDof() * Order);
     Index j = m.bodyIndexByName(bodyName);
-    auto C_b_0 = mc.linkMotions[j].inverse();
+    auto C_b_0 = mc.bodyMotions[j].inverse();
     while (j != -1) {
-        J.block(0, order * posInDof[j], 6 * order, m.joint(j).dof()) = ((C_b_0 * mc.linkMotions[j]) * DiMotionSupace{ m.joint(j).S() }).matrix();
+        auto C_b_j = C_b_0 * mc.bodyMotions[j];
+        DiMotionSubspace<Order> DS{ m.joint(j).S() };
+        auto res = C_b_j * DS;
+        J.block(0, Order * posInDof[j], 6 * Order, m.joint(j).dof()) = res.matrix();
         j = parents[j];
     }
 
     return J;
 }
 
-template <int Order, int JacOrder>
+template <int JacOrder, int Order>
 Eigen::MatrixXd BasicJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    return BasicJacobianOfOrder(m, mbc, bodyName, JacOrder);
+    return BasicJacobianOfOrder(m, mc, bodyName, JacOrder);
 }
 
 template <int Order>
 Eigen::MatrixXd BasicJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName, int jacOrder)
 {
-    const auto& parents = m.parents();
-    const auto& posInDof = m.jointsPosInDof();
+    const auto& parents = m.jointParents();
+    const auto& posInDof = m.jointPosInDof();
     Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, m.nDof());
     Index j = m.bodyIndexByName(bodyName);
-    auto C_b_0 = mc.linkMotions[j].inverse();
+    auto C_b_0 = mc.bodyMotions[j].inverse();
     while (j != -1) {
         // A faster code would recursively compute
-        auto C_b_j = C_b_0 * mc.linkMotions[j];
-        auto S = mb.joint(j).S();
+        auto C_b_j = C_b_0 * mc.bodyMotions[j];
+        auto S = m.joint(j).S();
         if (jacOrder == 0) {
-            J.block(0, posInDof[j], 6, S.cols()) = C_b_j.transform() * S.matrix();
+            J.block(0, posInDof[j], 6, S.cols()) = C_b_j.transform() * S;
         } else {
-            J.block(0, posInDof[j], 6, S.cols()) = (C_b_j[jacOrder - 1] * S).matrix();
+            J.block(0, posInDof[j], 6, S.cols()) = C_b_j[jacOrder - 1] * S;
         }
         j = parents[j];
     }

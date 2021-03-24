@@ -23,49 +23,57 @@ public:
         std::vector<Index> jointChilds, std::vector<Transform> T0);
 
     /*! \brief Get number of bodies. */
-    Index nLinks() const noexcept;
+    inline Index nLinks() const noexcept { return m_nLinks; }
     /*! \brief Get number of joint parameters. */
-    Index nParam() const noexcept;
+    inline Index nParam() const noexcept { return m_nParam; }
     /*! \brief Get number of DoF. */
-    Index nDof() const noexcept;
+    inline Index nDof() const noexcept { return m_nDof; }
     /*! \brief Get parent body index from joint index. */
-    Index jointParent(Index jointIndex) const noexcept;
+    inline Index jointParent(Index jointIndex) const noexcept { return m_jointParents[jointIndex]; }
     /*! \brief Get parent body index from joint index. Can throw. */
-    Index jointParentAt(Index jointIndex) const;
+    inline Index jointParentAt(Index jointIndex) const { return m_jointParents.at(jointIndex); }
     /*! \brief Get child body index from joint index. */
-    Index jointChild(Index jointIndex) const noexcept;
+    inline Index jointChild(Index jointIndex) const noexcept { return m_jointChilds[jointIndex]; }
     /*! \brief Get child body index from joint index. Can throw. */
-    Index jointChildAt(Index jointIndex) const;
+    inline Index jointChildAt(Index jointIndex) const { return m_jointChilds.at(jointIndex); }
     /*! \brief Position of the joint index in vector of parameters size. */
-    Index jointPosInParam(Index jointIndex) const;
+    inline Index jointPosInParam(Index jointIndex) const { return m_jointPosInParam.at(jointIndex); }
     /*! \brief Position of the joint index in vector of DoF size. */
-    Index jointPosInDof(Index jointIndex) const;
+    inline Index jointPosInDof(Index jointIndex) const { return m_jointPosInDof.at(jointIndex); }
+    /*! \brief Get body index from its name. */
+    inline Index bodyIndexByName(const std::string& bodyName) const noexcept { return m_bodyIndexByName.find(bodyName)->second; }
+    /*! \brief Get body index from its name. */
+    inline Index bodyIndexByNameAt(const std::string& bodyName) const { return m_bodyIndexByName.at(bodyName); }
+    /*! \brief Get joint index from its name. */
+    inline Index jointIndexByName(const std::string& jointName) const noexcept { return m_jointIndexByName.find(jointName)->second; }
+    /*! \brief Get joint index from its name. */
+    inline Index jointIndexByNameAt(const std::string& jointName) const { return m_jointIndexByName.at(jointName); }
     /*! \brief Get joint from its index. */
-    const Joint& joint(Index jointIndex) const noexcept;
+    inline const Joint& joint(Index jointIndex) const noexcept { return m_joints[jointIndex]; }
     /*! \brief Get joint from its index. Can throw. */
-    const Joint& jointAt(Index jointIndex) const;
+    inline const Joint& jointAt(Index jointIndex) const { return m_joints.at(jointIndex); }
     /*! \brief Get joint from its index. */
-    const Body& body(Index bodyIndex) const noexcept;
+    inline const Body& body(Index bodyIndex) const noexcept { return m_bodies[bodyIndex]; }
     /*! \brief Get joint from its index. Can throw. */
-    const Body& bodyAt(Index bodyIndex) const;
+    inline const Body& bodyAt(Index bodyIndex) const { return m_bodies.at(bodyIndex); }
     /*! \brief Get transformation from previous body to current joint index. */
-    const Transform& T0(Index jointIndex) const noexcept;
+    inline const Transform& T0(Index jointIndex) const noexcept { return m_T0[jointIndex]; }
     /*! \brief Get transformation from previous body to current joint index. Can throw. */
-    const Transform& T0At(Index jointIndex) const;
+    inline const Transform& T0At(Index jointIndex) const { return m_T0.at(jointIndex); }
     /*! \brief Get set of all joints. */
-    const std::vector<Joint>& joints() const noexcept;
+    inline const std::vector<Joint>& joints() const noexcept { return m_joints; }
     /*! \brief Get set of all bodies. */
-    const std::vector<Body>& bodies() const noexcept;
+    inline const std::vector<Body>& bodies() const noexcept { return m_bodies; }
     /*! \brief Get set of all joint parents. */
-    const std::vector<Index>& jointParents() const noexcept;
+    inline const std::vector<Index>& jointParents() const noexcept { return m_jointParents; }
     /*! \brief Get set of all joint childs. */
-    const std::vector<Index>& jointChilds() const noexcept;
+    inline const std::vector<Index>& jointChilds() const noexcept { return m_jointChilds; }
     /*! \brief Get set of all joint position in vector of parameters size. */
-    const std::vector<Index>& jointPosInParam() const noexcept;
+    inline const std::vector<Index>& jointPosInParam() const noexcept { return m_jointPosInParam; }
     /*! \brief Get set of all joint position in vector of DoF size. */
-    const std::vector<Index>& jointPosInDof() const noexcept;
+    inline const std::vector<Index>& jointPosInDof() const noexcept { return m_jointPosInDof; }
     /*! \brief Get set of all relative transformation from previous bodies to joints. */
-    const std::vector<Transform>& T0s() const noexcept;
+    inline const std::vector<Transform>& T0s() const noexcept { return m_T0; }
 
 private:
     Index m_nLinks; /*!< Number of bodies */
