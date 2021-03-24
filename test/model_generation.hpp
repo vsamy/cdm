@@ -2,9 +2,9 @@
 
 #include <cdm/ModelConfig.hpp>
 #include <cdm/typedefs.hpp>
-#include <rbdyn/EulerIntegration.h>
-#include <rbdyn/MultiBody.h>
-#include <rbdyn/MultiBodyConfig.h>
+#include <RBDyn/EulerIntegration.h>
+#include <RBDyn/MultiBody.h>
+#include <RBDyn/MultiBodyConfig.h>
 
 struct TrajectoryData {
     void setCurData(int t)

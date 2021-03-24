@@ -53,11 +53,11 @@ Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<O
 {
     std::vector<Eigen::Matrix6d> M(m.nLinks(), Eigen::Matrix6d::Zero());
     const auto& bodies = m.bodies();
-    const auto& parents = m.parents();
-    const auto& posInDof = m.jointsPosInDof();
-    for (Index i = mb.nrBodies() - 1; i >= 0; --i) {
+    const auto& parents = m.jointParents();
+    const auto& posInDof = m.jointPosInDof();
+    for (Index i = m.nLinks() - 1; i >= 0; --i) {
         M[i] += bodies[i].inertia().matrix();
-        int p = pred[i]; // parent
+        int p = parents[i]; // parent
         if (p != -1) {
             auto C_p_b = mc.bodyMotions[p].inverse() * mc.bodyMotions[i];
             if constexpr (JacOrder == 0) {
@@ -73,20 +73,19 @@ Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<O
     Index j = bInd;
     auto C_b_0 = mc.bodyMotions[bInd].inverse();
     while (j != -1) {
-        auto S = mb.joint(j).S();
+        auto S = m.joint(j).S();
         auto C_b_j = C_b_0 * mc.bodyMotions[j];
         if constexpr (JacOrder == 0) {
-            B.block(0, pos[j], 6, S.cols()) = M[bInd] * C_b_j.transform().matrix() * S.matrix();
+            B.block(0, posInDof[j], 6, S.cols()) = M[bInd] * C_b_j.transform().matrix() * S.matrix();
         } else {
-            B.block(0, pos[j], 6, S.cols()) = M[bInd] * C_b_j[JacOrder - 1].matrix() * S.matrix();
+            B.block(0, posInDof[j], 6, S.cols()) = M[bInd] * C_b_j[JacOrder - 1].matrix() * S.matrix();
         }
-        j = pred[j];
+        j = parents[j];
     }
 
-    auto findChildren = [&m](Index b) {
-        const auto& parents = m.parents();
+    auto findChildren = [&parents, nLinks = m.nLinks()](Index b) {
         std::vector<Index> children;
-        for (int i = b + 1; i < mb.nrBodies(); ++i) {
+        for (int i = b + 1; i < nLinks; ++i) {
             if (parents[i] == b)
                 children.push_back(i);
         }
@@ -97,14 +96,13 @@ Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<O
     // Compute \sum Cd * p part
     std::function<void(const std::vector<Index>&)> computeChildMomentumsAndAdd;
     computeChildMomentumsAndAdd = [&](const std::vector<Index>& children) {
-        const auto& posInDof = m.jointsPosInDof();
         for (int c : children) {
             auto C_b_c = C_b_0 * mc.bodyMotions[c];
-            auto S = mb.joint(c).S();
+            auto S = m.joint(c).S();
             if constexpr (JacOrder == 0) {
-                B.block(0, pos[c], 6, S.cols()) = C_b_c.transform().dualMatrix() * M[c] * S.matrix();
+                B.block(0, posInDof[c], 6, S.cols()) = C_b_c.transform().dualMatrix() * M[c] * S.matrix();
             } else {
-                B.block(0, pos[c], 6, S.cols()) = C_b_c[JacOrder - 1].dualMatrix() * M[c] * S.matrix();
+                B.block(0, posInDof[c], 6, S.cols()) = C_b_c[JacOrder - 1].dualMatrix() * M[c] * S.matrix();
             }
 
             computeChildMomentumsAndAdd(findChildren(c));

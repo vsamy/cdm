@@ -19,7 +19,7 @@ Eigen::MatrixXd JointForceJacobianOfOrder(const Model& m, const ModelConfig<Orde
         return JointMomentumJacobianOfOrder<JacOrder>(m, mc, bodyName);
     } else {
         Index j = m.bodyIndexByName(bodyName);
-        CrossNd<JacOrder> cx{ tree.bodies[j].motion() };
+        CrossN<JacOrder> cx{ mc.bodyMotions[j].motion() };
         Eigen::MatrixXd D = cx.matrix().middleRows<6 * JacOrder>(6 * (JacOrder - 1)) / static_cast<double>(JacOrder); // TODO: Should be Scalar
         D.middleCols<6>(6 * JacOrder).setIdentity();
         return D * JointMomentumJacobianOfOrder<JacOrder>(m, mc, bodyName);

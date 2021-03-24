@@ -9,12 +9,12 @@
 #include <cdm/JointMomentumJacobian.hpp>
 #include <cdm/LinkForceJacobian.hpp>
 #include <cdm/LinkMomentumJacobian.hpp>
-#include <rbdyn/FA.h>
-#include <rbdyn/FD.h>
-#include <rbdyn/FK.h>
-#include <rbdyn/FV.h>
-#include <rbdyn/ID.h>
-#include <rbdyn/Jacobian.h>
+#include <RBDyn/FA.h>
+#include <RBDyn/FD.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
+#include <RBDyn/ID.h>
+#include <RBDyn/Jacobian.h>
 #include <tuple>
 
 struct FixedOrder {

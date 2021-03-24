@@ -8,11 +8,11 @@
 #include <tuple>
 
 // RBDyn
-#include <rbdyn/Body.h>
-#include <rbdyn/Joint.h>
-#include <rbdyn/MultiBody.h>
-#include <rbdyn/MultiBodyConfig.h>
-#include <rbdyn/MultiBodyGraph.h>
+#include <RBDyn/Body.h>
+#include <RBDyn/Joint.h>
+#include <RBDyn/MultiBody.h>
+#include <RBDyn/MultiBodyConfig.h>
+#include <RBDyn/MultiBodyGraph.h>
 
 namespace rbd {
 

@@ -3,9 +3,9 @@
 #include "macros.hpp"
 #include "model_generation.hpp"
 #include <cdm/FK.hpp>
-#include <rbdyn/FA.h>
-#include <rbdyn/FK.h>
-#include <rbdyn/FV.h>
+#include <RBDyn/FA.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
 #include <tuple>
 
 struct FixedOrder {

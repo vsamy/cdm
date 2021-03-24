@@ -2,6 +2,7 @@
 
 #include "cdm/Model.hpp"
 #include "cdm/ModelConfig.hpp"
+#include "math_utility.hpp"
 
 namespace cdm {
 
@@ -15,10 +16,7 @@ Eigen::MatrixXd BasicJacobian(const Model& m, const ModelConfig<Order>& mc, cons
     Index j = m.bodyIndexByName(bodyName);
     auto C_b_0 = mc.bodyMotions[j].inverse();
     while (j != -1) {
-        auto C_b_j = C_b_0 * mc.bodyMotions[j];
-        DiMotionSubspace<Order> DS{ m.joint(j).S() };
-        auto res = C_b_j * DS;
-        J.block(0, Order * posInDof[j], 6 * Order, m.joint(j).dof()) = res.matrix();
+        J.block(0, Order * posInDof[j], 6 * Order, m.joint(j).dof()) = (C_b_0 * mc.bodyMotions[j]).matrix() * makeDiag<Order>(m.joint(j).S().matrix());
         j = parents[j];
     }
 

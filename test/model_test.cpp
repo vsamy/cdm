@@ -2,7 +2,7 @@
 #include "doctest/doctest.h"
 #include "macros.hpp"
 #include "model_generation.hpp"
-#include <rbdyn/EulerIntegration.h>
+#include <RBDyn/EulerIntegration.h>
 
 TEST_CASE("body")
 {

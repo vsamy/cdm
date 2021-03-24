@@ -5,11 +5,11 @@
 #include <cdm/FD.hpp>
 #include <cdm/FK.hpp>
 #include <cdm/ID.hpp>
-#include <rbdyn/FA.h>
-#include <rbdyn/FD.h>
-#include <rbdyn/FK.h>
-#include <rbdyn/FV.h>
-#include <rbdyn/ID.h>
+#include <RBDyn/FA.h>
+#include <RBDyn/FD.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
+#include <RBDyn/ID.h>
 #include <tuple>
 
 struct FixedOrder {

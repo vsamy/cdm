@@ -4,10 +4,10 @@
 #include "model_generation.hpp"
 #include <cdm/FK.hpp>
 #include <cdm/ID.hpp>
-#include <rbdyn/FA.h>
-#include <rbdyn/FK.h>
-#include <rbdyn/FV.h>
-#include <rbdyn/ID.h>
+#include <RBDyn/FA.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
+#include <RBDyn/ID.h>
 #include <tuple>
 
 struct FixedOrder {
