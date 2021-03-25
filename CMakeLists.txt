@@ -14,7 +14,7 @@ set(DOXYGEN_USE_MATHJAX "YES")
 include(cmake/base.cmake)
 include(cmake/msvc-specific.cmake)
 
-SET(CXX_DISABLE_WERROR True)
+# SET(CXX_DISABLE_WERROR True)
 project(${PROJECT_NAME} CXX)
 
 option(BUILD_TESTING "Build unit tests." ON)
@@ -24,8 +24,7 @@ if(MSVC)
 endif()
 
 # External dependencies
-find_package(Eigen3 REQUIRED)
-find_package(coma REQUIRED)
+add_project_dependency(coma REQUIRED)
 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
