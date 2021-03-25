@@ -57,21 +57,22 @@ void test_id(bool withGravity)
     Eigen::VectorXd tau = rbd::dofToVector(mb, mbc.jointTorque);
     double prec = coma::dummy_precision<double>();
     for (int i = 0; i < mb.nrBodies(); ++i) {
+        size_t ui = static_cast<size_t>(i);
         int posInDof = mb.jointPosInDof(i);
         int dof = mb.joint(i).dof();
         // First momentum and force (=momentum)
-        auto f1 = mb.body(i).inertia() * mbc.bodyVelB[i];
-        REQUIRE((f1.vector() - mc1.bodyMomentums[i][0].vector()).norm() < prec);
-        REQUIRE((f1.vector() - mc1.bodyForces[i][0].vector()).norm() < prec);
+        auto f1 = mb.body(i).inertia() * mbc.bodyVelB[ui];
+        REQUIRE((f1.vector() - mc1.bodyMomentums[ui][0].vector()).norm() < prec);
+        REQUIRE((f1.vector() - mc1.bodyForces[ui][0].vector()).norm() < prec);
         // Momentum derivative
-        auto f2 = mb.body(i).inertia() * mbc.bodyAccB[i];
-        REQUIRE((f2.vector() - mc1.bodyMomentums[i][1].vector()).norm() < prec);
+        auto f2 = mb.body(i).inertia() * mbc.bodyAccB[ui];
+        REQUIRE((f2.vector() - mc1.bodyMomentums[ui][1].vector()).norm() < prec);
         // force
-        f2 += mbc.bodyVelB[i].crossDual(f1);
-        REQUIRE((f2.vector() - mc1.bodyForces[i][1].vector()).norm() < prec);
-        REQUIRE((id.f()[i].vector() - mc1.jointForces[i][1].vector()).norm() < prec);
+        f2 += mbc.bodyVelB[ui].crossDual(f1);
+        REQUIRE((f2.vector() - mc1.bodyForces[ui][1].vector()).norm() < prec);
+        REQUIRE((id.f()[ui].vector() - mc1.jointForces[ui][1].vector()).norm() < prec);
         // Torque
-        REQUIRE((tau.segment(posInDof, dof) - mc1.jointTorques[i].segment(dof, dof)).norm() < prec);
+        REQUIRE((tau.segment(posInDof, dof) - mc1.jointTorques[ui].segment(dof, dof)).norm() < prec);
     }
 
     // Second ID
@@ -84,18 +85,19 @@ void test_id(bool withGravity)
     // Please remember that here the 0-order force is the momentum and f[1] corresponds to the classical force so f[0] == p[0]
     // And we have df[0]/dt == dp[0]/dt == p[1], thus df[0]/dt != f[1] (the numerical derivative of f[0] is p[1] and not f[1])
     for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
-        auto dlP = (mc2.bodyMomentums[i] - mc1.bodyMomentums[i]) / dt;
-        auto dlF = (mc2.bodyForces[i] - mc1.bodyForces[i]) / dt;
-        auto djP = (mc2.jointMomentums[i] - mc1.jointMomentums[i]) / dt;
-        auto djF = (mc2.jointForces[i] - mc1.jointForces[i]) / dt;
+        size_t ui = static_cast<size_t>(i);
+        auto dlP = (mc2.bodyMomentums[ui] - mc1.bodyMomentums[ui]) / dt;
+        auto dlF = (mc2.bodyForces[ui] - mc1.bodyForces[ui]) / dt;
+        auto djP = (mc2.jointMomentums[ui] - mc1.jointMomentums[ui]) / dt;
+        auto djF = (mc2.jointForces[ui] - mc1.jointForces[ui]) / dt;
         for (cdm::Index n = 0; n < FixedOrder::order - 1; ++n) {
             if (!withGravity) {
-                REQUIRE((dlP[n] - mc2.bodyMomentums[i][n + 1]).vector().norm() < dt * 1000.);
-                REQUIRE((djP[n] - mc2.jointMomentums[i][n + 1]).vector().norm() < dt * 1000.);
+                REQUIRE((dlP[n] - mc2.bodyMomentums[ui][n + 1]).vector().norm() < dt * 1000.);
+                REQUIRE((djP[n] - mc2.jointMomentums[ui][n + 1]).vector().norm() < dt * 1000.);
             }
             if (n != 0) {
-                REQUIRE((dlF[n] - mc2.bodyForces[i][n + 1]).vector().norm() < dt * 10000.);
-                REQUIRE((djF[n] - mc2.jointForces[i][n + 1]).vector().norm() < dt * 10000.);
+                REQUIRE((dlF[n] - mc2.bodyForces[ui][n + 1]).vector().norm() < dt * 10000.);
+                REQUIRE((djF[n] - mc2.jointForces[ui][n + 1]).vector().norm() < dt * 10000.);
             }
         }
     }

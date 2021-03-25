@@ -32,15 +32,16 @@ template <int Order>
 ModelConfig<Order>::ModelConfig(const Model& m, Index order)
     : q(m.nParam())
     , dqs(m.nDof(), order * m.nLinks())
-    , jointMotions(m.nLinks())
-    , bodyMotions(m.nLinks())
-    , jointMomentums(m.nLinks())
-    , bodyMomentums(m.nLinks())
-    , jointForces(m.nLinks())
-    , bodyForces(m.nLinks())
-    , jointTorques(m.nLinks())
+    , jointMotions(static_cast<size_t>(m.nLinks()))
+    , bodyMotions(static_cast<size_t>(m.nLinks()))
+    , jointMomentums(static_cast<size_t>(m.nLinks()))
+    , bodyMomentums(static_cast<size_t>(m.nLinks()))
+    , jointForces(static_cast<size_t>(m.nLinks()))
+    , bodyForces(static_cast<size_t>(m.nLinks()))
+    , jointTorques(static_cast<size_t>(m.nLinks()))
 {
-    for (Index i = 0; i < m.nLinks(); ++i) {
+    size_t nLinks = static_cast<size_t>(m.nLinks());
+    for (size_t i = 0; i < nLinks; ++i) {
         jointTorques[i].resize(m.nDof());
     }
 }
@@ -50,7 +51,8 @@ void ModelConfig<Order>::setZero(const Model& m)
 {
     q.setZero();
     dqs.setZero();
-    for (Index i = 0; i < m.nLinks(); ++i) {
+    size_t nLinks = static_cast<size_t>(m.nLinks());
+    for (size_t i = 0; i < nLinks; ++i) {
         jointMotions[i].setZero();
         bodyMotions[i].setZero();
         jointMomentums[i].setZero();
@@ -64,11 +66,11 @@ void ModelConfig<Order>::setZero(const Model& m)
 template <int Order>
 Eigen::VectorXd ModelConfig<Order>::getAleph() const
 {
-    const Index order = static_cast<Index>(dqs.cols());
+    auto order = dqs.cols();
     const auto& factors = coma::factorial_factors<double, Order>; // TODO: Use inverse_factorial_factors instead
     Eigen::VectorXd f(order);
-    for (Index i = 0; i < order; ++i) {
-        f(i) = 1. / factors[i];
+    for (auto i = 0; i < order; ++i) {
+        f(i) = 1. / factors[static_cast<size_t>(i)];
     }
 
     Eigen::MatrixXd alephMat = (dqs * f.asDiagonal()).transpose();

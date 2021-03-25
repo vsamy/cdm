@@ -7,8 +7,7 @@ namespace cdm {
 template <int Order>
 Eigen::MatrixXd LinkForceJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    auto j = m.bodyIndexByName(bodyName);
-    auto D = generateD(CrossN<Order>{ mc.bodyMotions[j].motion() });
+    auto D = generateD(CrossN<Order>{ mc.bodyMotions[static_cast<size_t>(m.bodyIndexByName(bodyName))].motion() });
     return D * LinkMomentumJacobian(m, mc, bodyName);
 }
 
@@ -18,7 +17,7 @@ Eigen::MatrixXd LinkForceJacobianOfOrder(const Model& m, const ModelConfig<Order
     if constexpr (JacOrder == 0) {
         return LinkMomentumJacobianOfOrder<JacOrder>(m, mc, bodyName);
     } else {
-        int j = m.bodyIndexByName(bodyName);
+        Index j = m.bodyIndexByName(bodyName);
         CrossN<JacOrder> cx{ mc.bodyMotions[j].motions() };
         Eigen::MatrixXd D = cx.matrix().middleRows<6 * JacOrder>(6 * (JacOrder - 1)) / JacOrder;
         D.middleCols<6>(6 * JacOrder).setIdentity();

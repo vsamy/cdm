@@ -7,24 +7,25 @@ namespace cdm {
 template <int Order>
 Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    const auto& posInDof = m.jointPosInDof();
-    const auto& parents = m.jointParents();
+    static_assert(Order >= 0, "Not yet ready for Dynamic");
+    // TODO: assert(m.hasBody(bodyName))
     Index bInd = m.bodyIndexByName(bodyName);
-    auto C_b_0 = mc.bodyMotions[bInd].inverse();
+    size_t ubInd = static_cast<size_t>(bInd);
+    auto C_b_0 = mc.bodyMotions[ubInd].inverse();
     // Get p part
     Eigen::MatrixXd B = Eigen::MatrixXd::Zero(6 * Order, m.nDof() * Order);
     auto M = getSubTreeInertia(m, mc);
     Index j = bInd;
     while (j != -1) {
         auto G = makeDiag<Order>(m.joint(j).S().matrix()); // G = diag(S)
-        B.block(0, Order * posInDof[j], 6 * Order, G.cols()) = M[bInd] * (C_b_0 * mc.bodyMotions[j]).template matrix<Order>() * G;
-        j = parents[j];
+        B.block(0, Order * m.jointPosInDof(j), 6 * Order, G.cols()) = M[ubInd] * (C_b_0 * mc.bodyMotions[static_cast<size_t>(j)]).template matrix<Order>() * G;
+        j = m.jointParent(j);
     }
 
-    auto findChildren = [&parents, nLink = m.nLinks()](Index b) {
+    auto findChildren = [&m](Index b) {
         std::vector<Index> children;
-        for (Index i = b + 1; i < nLink; ++i) {
-            if (parents[i] == b)
+        for (Index i = b + 1; i < m.nLinks(); ++i) {
+            if (m.jointParent(i) == b)
                 children.push_back(i);
         }
 
@@ -34,11 +35,11 @@ Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& 
     // Compute \sum Cd * p part
     std::function<void(const Model& m, const std::vector<Index>&)> computeChildMomentumsAndAdd;
     computeChildMomentumsAndAdd = [&, M](const Model& m, const std::vector<Index>& children) {
-        const auto& posInDof = m.jointPosInDof();
         for (auto c : children) {
-            auto C_b_c = C_b_0 * mc.bodyMotions[c];
+            size_t uc = static_cast<size_t>(c);
+            auto C_b_c = C_b_0 * mc.bodyMotions[uc];
             auto G = makeDiag<Order>(m.joint(c).S().matrix());
-            B.block(0, Order * posInDof[c], 6 * Order, G.cols()) = C_b_c.template dualMatrix<Order>() * M[c] * G;
+            B.block(0, Order * m.jointPosInDof(c), 6 * Order, G.cols()) = C_b_c.template dualMatrix<Order>() * M[uc] * G;
 
             computeChildMomentumsAndAdd(m, findChildren(c));
         }
@@ -51,19 +52,23 @@ Eigen::MatrixXd JointMomentumJacobian(const Model& m, const ModelConfig<Order>& 
 template <int JacOrder, int Order>
 Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<Order>& mc, const std::string& bodyName)
 {
-    std::vector<Eigen::Matrix6d> M(m.nLinks(), Eigen::Matrix6d::Zero());
+    static_assert(Order >= 0, "Not yet ready for Dynamic");
+
+    std::vector<Eigen::Matrix6d> M(static_cast<size_t>(m.nLinks()), Eigen::Matrix6d::Zero());
     const auto& bodies = m.bodies();
     const auto& parents = m.jointParents();
-    const auto& posInDof = m.jointPosInDof();
     for (Index i = m.nLinks() - 1; i >= 0; --i) {
-        M[i] += bodies[i].inertia().matrix();
-        int p = parents[i]; // parent
+        size_t ui = static_cast<size_t>(i);
+        M[ui] += bodies[ui].inertia().matrix();
+        Index p = parents[ui]; // parent
         if (p != -1) {
-            auto C_p_b = mc.bodyMotions[p].inverse() * mc.bodyMotions[i];
+            size_t up = static_cast<size_t>(p);
+            auto C_p_b = mc.bodyMotions[up].inverse() * mc.bodyMotions[ui];
             if constexpr (JacOrder == 0) {
-                M[p] += C_p_b.transform().dualMatrix() * M[i] * C_p_b.transform().inverse().matrix();
+                M[up] += C_p_b.transform().dualMatrix() * M[ui] * C_p_b.transform().inverse().matrix();
             } else {
-                M[p] += C_p_b[JacOrder - 1].dualMatrix() * M[i] * C_p_b.inverse()[JacOrder - 1].matrix();
+                constexpr size_t JOIndex = static_cast<size_t>(JacOrder - 1);
+                M[up] += C_p_b[JOIndex].dualMatrix() * M[ui] * C_p_b.inverse()[JOIndex].matrix();
             }
         }
     }
@@ -76,18 +81,20 @@ Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<O
         auto S = m.joint(j).S();
         auto C_b_j = C_b_0 * mc.bodyMotions[j];
         if constexpr (JacOrder == 0) {
-            B.block(0, posInDof[j], 6, S.cols()) = M[bInd] * C_b_j.transform().matrix() * S.matrix();
+            B.block(0, m.jointPosInDof(j), 6, S.cols()) = M[bInd] * C_b_j.transform().matrix() * S.matrix();
         } else {
-            B.block(0, posInDof[j], 6, S.cols()) = M[bInd] * C_b_j[JacOrder - 1].matrix() * S.matrix();
+            constexpr size_t JOIndex = static_cast<size_t>(JacOrder - 1);
+            B.block(0, m.jointPosInDof(j), 6, S.cols()) = M[bInd] * C_b_j[JOIndex].matrix() * S.matrix();
         }
-        j = parents[j];
+        j = m.jointParent(j);
     }
 
-    auto findChildren = [&parents, nLinks = m.nLinks()](Index b) {
+    auto findChildren = [&m](Index b) {
         std::vector<Index> children;
-        for (int i = b + 1; i < nLinks; ++i) {
-            if (parents[i] == b)
+        for (Index i = b + 1; i < m.nLinks(); ++i) {
+            if (m.jointParent(i) == b) {
                 children.push_back(i);
+            }
         }
 
         return children;
@@ -96,13 +103,15 @@ Eigen::MatrixXd JointMomentumJacobianOfOrder(const Model& m, const ModelConfig<O
     // Compute \sum Cd * p part
     std::function<void(const std::vector<Index>&)> computeChildMomentumsAndAdd;
     computeChildMomentumsAndAdd = [&](const std::vector<Index>& children) {
-        for (int c : children) {
-            auto C_b_c = C_b_0 * mc.bodyMotions[c];
+        for (Index c : children) {
+            size_t uc = static_cast<size_t>(c);
+            auto C_b_c = C_b_0 * mc.bodyMotions[uc];
             auto S = m.joint(c).S();
             if constexpr (JacOrder == 0) {
-                B.block(0, posInDof[c], 6, S.cols()) = C_b_c.transform().dualMatrix() * M[c] * S.matrix();
+                B.block(0, m.jointPosInDof(c), 6, S.cols()) = C_b_c.transform().dualMatrix() * M[uc] * S.matrix();
             } else {
-                B.block(0, posInDof[c], 6, S.cols()) = C_b_c[JacOrder - 1].dualMatrix() * M[c] * S.matrix();
+                constexpr size_t JOIndex = static_cast<size_t>(JacOrder - 1);
+                B.block(0, m.jointPosInDof(c), 6, S.cols()) = C_b_c[JOIndex].dualMatrix() * M[uc] * S.matrix();
             }
 
             computeChildMomentumsAndAdd(findChildren(c));

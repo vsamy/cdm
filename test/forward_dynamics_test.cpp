@@ -61,16 +61,18 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
     rbd::forwardAcceleration(mb, mbc);
     id.inverseDynamics(mb, mbc);
 
-    std::vector<Eigen::VectorXd> tauP(model.nLinks());
-    std::vector<Eigen::VectorXd> tauF(model.nLinks());
+    size_t un = static_cast<size_t>(model.nLinks());
+    std::vector<Eigen::VectorXd> tauP(un);
+    std::vector<Eigen::VectorXd> tauF(un);
     const auto& factors = coma::factorial_factors<double, order>;
     for (Index i = 0; i < model.nLinks(); ++i) {
+        size_t ui = static_cast<size_t>(i);
         auto GT = cdm::DiMotionSubspace<order>{ model.joint(i).S().transpose() };
-        tauP[i] = GT * mcNoGrav.jointMomentums[i];
-        tauF[i] = mc.jointTorques[i];
+        tauP[ui] = GT * mcNoGrav.jointMomentums[ui];
+        tauF[ui] = mc.jointTorques[ui];
         Index dof = model.joint(i).dof();
         for (int n = 0; n < order; ++n) {
-            tauP[i].segment(n * dof, dof) /= factors[n];
+            tauP[ui].segment(n * dof, dof) /= factors[static_cast<size_t>(n)];
         }
     }
 
@@ -78,17 +80,17 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
     Eigen::VectorXd tauF1{ mb.nrDof() };
     for (int i = 0; i < mb.nrJoints(); ++i) {
         int dof = mb.joint(i).dof();
-        tauF1.segment(mb.jointPosInDof(i), dof) = tauF[i].segment(dof, dof);
+        tauF1.segment(mb.jointPosInDof(i), dof) = tauF[static_cast<size_t>(i)].segment(dof, dof);
     }
     mbc.jointTorque = rbd::vectorToDof(mb, tauF1);
     rbd::ForwardDynamics fd{ mb };
     fd.forwardDynamics(mb, mbc);
 
     // Prepare recursive
-    Eigen::MatrixXd dqs = data.dqs[t];
+    Eigen::MatrixXd dqs = data.dqs[static_cast<size_t>(t)];
     Eigen::VectorXd tau(model.nDof());
     Eigen::VectorXd f = Eigen::VectorXd::Zero(model.nDof());
-    data.dqs[t].setZero();
+    data.dqs[static_cast<size_t>(t)].setZero();
 
     // FD recursion
     Init(data, model, mc);
@@ -96,17 +98,18 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
     cdm::ID(model, mc);
     for (int n = 0; n < order; ++n) {
         for (Index j = 0; j < model.nLinks(); ++j) {
+            size_t uj = static_cast<size_t>(j);
             Index dof = model.joint(j).dof();
-            tau.segment(model.jointPosInDof(j), dof) = tauF[j].segment(n * dof, dof);
-            f.segment(model.jointPosInDof(j), dof) = mc.jointTorques[j].segment(n * dof, dof);
+            tau.segment(model.jointPosInDof(j), dof) = tauF[uj].segment(n * dof, dof);
+            f.segment(model.jointPosInDof(j), dof) = mc.jointTorques[uj].segment(n * dof, dof);
         }
-        data.dqs[t].col(n) = cdm::standardFD<order>(model, mc, tau - f);
+        data.dqs[static_cast<size_t>(t)].col(n) = cdm::standardFD<order>(model, mc, tau - f);
         Init(data, model, mc);
         cdm::FK(model, mc);
         cdm::ID(model, mc);
     }
 
-    REQUIRE(data.dqs[t].isApprox(dqs));
+    REQUIRE(data.dqs[static_cast<size_t>(t)].isApprox(dqs));
 
     // FD
     std::vector<Eigen::VectorXd> y = FD(model, mc, tauP);
@@ -114,7 +117,7 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
     for (Index i = 0; i < model.nLinks(); ++i) {
         Index pos = model.jointPosInDof(i);
         Index dof = model.joint(i).dof();
-        ddq.segment(pos, dof) = y[i].segment(dof, dof);
+        ddq.segment(pos, dof) = y[static_cast<size_t>(i)].segment(dof, dof);
     }
 
     // Check with RBDyn
@@ -126,7 +129,7 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
         Index dof = model.joint(i).dof();
         for (int n = 0; n < order; ++n) {
             Eigen::VectorXd mot = dqs.col(n).segment(model.jointPosInDof(i), dof);
-            Eigen::VectorXd yMot = y[i].segment(n * dof, dof) * factors[n];
+            Eigen::VectorXd yMot = y[static_cast<size_t>(i)].segment(n * dof, dof) * factors[static_cast<size_t>(n)];
             REQUIRE(mot.isApprox(yMot));
         }
     }

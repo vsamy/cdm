@@ -17,43 +17,49 @@ template <int Order>
 void ID(const Model& m, ModelConfig<Order>& mc)
 {
     const Index order = mc.world.order();
-    const auto& parents = m.jointParents();
-    const auto& childs = m.jointChilds();
     const auto& bodies = m.bodies();
     const auto& joints = m.joints();
 
     // Forward
     for (Index i = 0; i < m.nLinks(); ++i) {
-        const auto& motion = mc.bodyMotions[childs[i]].motion();
-        mc.bodyMomentums[childs[i]] = DiInertia<Order>{ bodies[childs[i]].inertia() } * motion;
+        size_t ui = static_cast<size_t>(i);
+        size_t uc = static_cast<size_t>(m.jointChild(i));
+        const auto& motion = mc.bodyMotions[uc].motion();
+        mc.bodyMomentums[uc] = DiInertia<Order>{ bodies[uc].inertia() } * motion;
         auto cnx = CrossN<Order>{ motion };
-        mc.bodyForces[childs[i]] = mc.bodyMomentums[childs[i]];
-        auto df = cnx.dualMul(mc.bodyMomentums[childs[i]]);
-        for (Index j = 0; j < order - 1; ++j)
-            mc.bodyForces[childs[i]][j + 1] += df[j];
-        mc.jointMomentums[i].setZero();
-        mc.jointForces[i].setZero();
+        mc.bodyForces[uc] = mc.bodyMomentums[uc];
+        auto df = cnx.dualMul(mc.bodyMomentums[uc]);
+        for (Index j = 0; j < order - 1; ++j) {
+            mc.bodyForces[uc][j + 1] += df[j];
+        }
+        mc.jointMomentums[ui].setZero();
+        mc.jointForces[ui].setZero();
     }
 
     // Backward
     for (Index i = m.nLinks() - 1; i >= 0; --i) {
-        mc.jointMomentums[i] += mc.bodyMomentums[childs[i]];
-        mc.jointForces[i] += mc.bodyForces[childs[i]];
-        mc.jointForces[i][0] = mc.jointMomentums[i][0];
-        auto GT = DiMotionSubspace<Order>{ joints[i].S().transpose() };
-        mc.jointTorques[i] = GT * mc.jointForces[i];
-        if (parents[i] < 0)
+        size_t ui = static_cast<size_t>(i);
+        size_t uc = static_cast<size_t>(m.jointChild(i));
+        mc.jointMomentums[ui] += mc.bodyMomentums[uc];
+        mc.jointForces[ui] += mc.bodyForces[uc];
+        mc.jointForces[ui][0] = mc.jointMomentums[ui][0];
+        auto GT = DiMotionSubspace<Order>{ joints[ui].S().transpose() };
+        mc.jointTorques[ui] = GT * mc.jointForces[ui];
+        Index parent = m.jointParent(i);
+        if (parent < 0) {
             continue;
+        }
 
-        mc.jointMomentums[parents[i]] += mc.jointMotions[i].dualMul(mc.jointMomentums[i]);
+        size_t uParent = static_cast<size_t>(parent);
+        mc.jointMomentums[uParent] += mc.jointMotions[ui].dualMul(mc.jointMomentums[ui]);
         if constexpr (Order == coma::Dynamic) {
-            auto df = mc.jointMotions[i].dualMul(mc.jointForces[i].subVector(1, order - 1));
+            auto df = mc.jointMotions[ui].dualMul(mc.jointForces[ui].subVector(1, order - 1));
             for (Index j = 0; j < order - 1; ++j)
-                mc.jointForces[parents[i]][j + 1] += df[j];
+                mc.jointForces[uParent][j + 1] += df[j];
         } else {
-            auto df = mc.jointMotions[i].dualMul(mc.jointForces[i].template subVector<Order - 1>(1));
+            auto df = mc.jointMotions[ui].dualMul(mc.jointForces[ui].template subVector<Order - 1>(1));
             for (Index j = 0; j < order - 1; ++j)
-                mc.jointForces[parents[i]][j + 1] += df[j];
+                mc.jointForces[uParent][j + 1] += df[j];
         }
     }
 }

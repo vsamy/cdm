@@ -12,16 +12,17 @@ Model::Model(std::vector<Joint> joints, std::vector<Body> bodies, std::vector<In
     , m_jointParents(std::move(jointParents))
     , m_jointChilds(std::move(jointChilds))
     , m_T0(std::move(T0))
-    , m_jointPosInParam(m_nLinks)
-    , m_jointPosInDof(m_nLinks)
+    , m_jointPosInParam(joints.size())
+    , m_jointPosInDof(joints.size())
 {
     for (Index i = 0; i < m_nLinks; ++i) {
-        m_bodyIndexByName[m_bodies[i].name()] = i;
-        m_jointIndexByName[m_joints[i].name()] = i;
-        m_jointPosInParam[i] = m_nParam;
-        m_jointPosInDof[i] = m_nDof;
-        m_nParam += m_joints[i].nParam();
-        m_nDof += m_joints[i].dof();
+        size_t ui = static_cast<size_t>(i);
+        m_bodyIndexByName[m_bodies[ui].name()] = i;
+        m_jointIndexByName[m_joints[ui].name()] = i;
+        m_jointPosInParam[ui] = m_nParam;
+        m_jointPosInDof[ui] = m_nDof;
+        m_nParam += m_joints[ui].nParam();
+        m_nDof += m_joints[ui].dof();
     }
 }
 

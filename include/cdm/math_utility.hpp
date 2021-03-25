@@ -37,15 +37,15 @@ template <int Order>
 std::vector<Eigen::MatrixXd> getSubTreeInertia(const Model& m, const ModelConfig<Order>& mc)
 {
     static_assert(Order > 0, "Not yet ready for dynamic");
-    std::vector<Eigen::MatrixXd> M(m.nLinks(), Eigen::MatrixXd::Zero(6 * Order, 6 * Order));
-    const auto& bodies = m.bodies();
-    const auto& parents = m.jointParents();
+    std::vector<Eigen::MatrixXd> M(static_cast<size_t>(m.nLinks()), Eigen::MatrixXd::Zero(6 * Order, 6 * Order));
     for (Index i = m.nLinks() - 1; i >= 0; --i) {
-        M[i] += makeDiag<Order>(bodies[i].inertia().matrix());
-        Index p = parents[i]; // parent
+        size_t ui = static_cast<size_t>(i);
+        M[ui] += makeDiag<Order>(m.body(i).inertia().matrix());
+        Index p = m.jointParent(i);
         if (p != -1) {
-            auto C_p_b = mc.bodyMotions[p].inverse() * mc.bodyMotions[i];
-            M[p] += C_p_b.template dualMatrix<Order>() * M[i] * C_p_b.inverse().template matrix<Order>();
+            size_t up = static_cast<size_t>(p);
+            auto C_p_b = mc.bodyMotions[up].inverse() * mc.bodyMotions[ui];
+            M[up] += C_p_b.template dualMatrix<Order>() * M[ui] * C_p_b.inverse().template matrix<Order>();
         }
     }
 

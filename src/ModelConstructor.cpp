@@ -17,8 +17,8 @@ void ModelConstructor::connectLink(const std::string& linkName, const std::strin
     Index bInd = m_bodyIndexFromName[linkName];
     Index jInd = m_jointIndexFromName[nextJointName];
 
-    m_bodyBases[bInd].next.emplace_back(jInd, T_l_j);
-    m_jointBases[jInd].previous = bInd;
+    m_bodyBases[static_cast<size_t>(bInd)].next.emplace_back(jInd, T_l_j);
+    m_jointBases[static_cast<size_t>(jInd)].previous = bInd;
     // TODO: Check for infinite loop that could occur due to recursion (only open kinematic chain for now)
 }
 
@@ -39,11 +39,11 @@ Model ModelConstructor::build(const std::string& rootName, const Transform& A_wo
 
     std::function<void(Index, const Transform&)> addNext;
     addNext = [&](Index linkIndex, const Transform& T) {
-        const auto& jb = m_jointBases[linkIndex];
-        const auto& bb = m_bodyBases[linkIndex];
+        const auto& jb = m_jointBases[static_cast<size_t>(linkIndex)];
+        const auto& bb = m_bodyBases[static_cast<size_t>(linkIndex)];
         joints.push_back(jb.joint);
         bodies.push_back(bb.body);
-        Index previousLink = jb.previous == -1 ? -1 : bodyIndexByName[m_bodyBases[jb.previous].body.name()];
+        Index previousLink = jb.previous == -1 ? -1 : bodyIndexByName[m_bodyBases[static_cast<size_t>(jb.previous)].body.name()];
         jointParents.push_back(previousLink);
         jointChilds.push_back(curPos);
         T0.push_back(T);

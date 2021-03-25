@@ -38,8 +38,8 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     data.dt = dt;
     data.time = Eigen::VectorXd::LinSpaced(nt, 0., (nt - 1) * dt);
     data.gravity = Eigen::Vector3d(0, 0, 9.81);
-    data.q.resize(nt, Eigen::VectorXd(mb.nrParams()));
-    data.dqs.resize(nt);
+    data.q.resize(static_cast<size_t>(nt), Eigen::VectorXd(mb.nrParams()));
+    data.dqs.resize(static_cast<size_t>(nt));
     std::fill(data.dqs.begin(), data.dqs.end(), Eigen::MatrixXd(mb.nrDof(), order));
 
     data.q[0] = rbd::paramToVector(mb, mbc.q);
@@ -48,23 +48,27 @@ TrajectoryData GenerateData(const rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
     Eigen::ArrayXd b = Eigen::ArrayXd::Random(mb.nrDof());
     Eigen::ArrayXd w = Eigen::ArrayXd::Random(mb.nrDof());
     for (int i = 0; i < nt; ++i) {
+        size_t ui = static_cast<size_t>(i);
         int n = order / 2;
         for (int k = 0; k < n; ++k) {
-            data.dqs[i].col(2 * k) = std::pow(-1., k) * a * w.pow(2 * k) * (w * data.time(i) + b).sin();
-            data.dqs[i].col(2 * k + 1) = std::pow(-1., k) * a * w.pow(2 * k + 1) * (w * data.time(i) + b).cos();
+            data.dqs[ui].col(2 * k) = std::pow(-1., k) * a * w.pow(2 * k) * (w * data.time(i) + b).sin();
+            data.dqs[ui].col(2 * k + 1) = std::pow(-1., k) * a * w.pow(2 * k + 1) * (w * data.time(i) + b).cos();
         }
         if constexpr (order % 2 == 1) {
-            data.dqs[i].col(order - 1) = std::pow(-1., n) * a * w.pow(2 * n) * (w * data.time(i) + b).sin();
+            data.dqs[ui].col(order - 1) = std::pow(-1., n) * a * w.pow(2 * n) * (w * data.time(i) + b).sin();
         }
     }
 
     for (int i = 0; i < nt - 1; ++i) {
-        auto alpha = rbd::vectorToDof(mb, data.dqs[i].col(0));
-        auto alphaD = rbd::vectorToDof(mb, data.dqs[i].col(1));
-        for (int j = 0; j < mb.nrJoints(); ++j)
-            rbd::eulerJointIntegration(mb.joint(j).type(), alpha[j], alphaD[j], dt, mbc.q[j]);
+        size_t ui = static_cast<size_t>(i);
+        auto alpha = rbd::vectorToDof(mb, data.dqs[ui].col(0));
+        auto alphaD = rbd::vectorToDof(mb, data.dqs[ui].col(1));
+        for (int j = 0; j < mb.nrJoints(); ++j) {
+            size_t uj = static_cast<size_t>(j);
+            rbd::eulerJointIntegration(mb.joint(j).type(), alpha[uj], alphaD[uj], dt, mbc.q[uj]);
+        }
 
-        data.q[i + 1] = rbd::paramToVector(mb, mbc.q);
+        data.q[ui + 1] = rbd::paramToVector(mb, mbc.q);
     }
 
     mbc.q = rbd::vectorToParam(mb, data.q[0]);
@@ -77,24 +81,27 @@ void Init(const TrajectoryData& data, const rbd::MultiBody& mb, rbd::MultiBodyCo
 {
     mbc.gravity = data.gravity;
     for (int j = 0; j < mb.nrJoints(); ++j) {
-        mbc.q = rbd::vectorToParam(mb, data.q[data.curData]);
-        mbc.alpha = rbd::vectorToDof(mb, data.dqs[data.curData].col(0));
-        mbc.alphaD = rbd::vectorToDof(mb, data.dqs[data.curData].col(1));
+        size_t dcd = static_cast<size_t>(data.curData);
+        mbc.q = rbd::vectorToParam(mb, data.q[dcd]);
+        mbc.alpha = rbd::vectorToDof(mb, data.dqs[dcd].col(0));
+        mbc.alphaD = rbd::vectorToDof(mb, data.dqs[dcd].col(1));
     }
 }
 
 template <int Order>
 void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Order>& mc)
 {
-    mc.bodyMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
-    mc.jointMotions.resize(m.nLinks(), cdm::CMTM<Order>(data.order));
-    mc.jointMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.jointForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.bodyMomentums.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.bodyForces.resize(m.nLinks(), cdm::ForceVectorX<Order>(data.order));
-    mc.jointTorques.resize(m.nLinks(), Eigen::VectorXd(m.nDof()));
-    mc.q = data.q[data.curData];
-    mc.dqs = data.dqs[data.curData];
+    size_t un = static_cast<size_t>(m.nLinks());
+    size_t dcd = static_cast<size_t>(data.curData);
+    mc.bodyMotions.resize(un, cdm::CMTM<Order>(data.order));
+    mc.jointMotions.resize(un, cdm::CMTM<Order>(data.order));
+    mc.jointMomentums.resize(un, cdm::ForceVectorX<Order>(data.order));
+    mc.jointForces.resize(un, cdm::ForceVectorX<Order>(data.order));
+    mc.bodyMomentums.resize(un, cdm::ForceVectorX<Order>(data.order));
+    mc.bodyForces.resize(un, cdm::ForceVectorX<Order>(data.order));
+    mc.jointTorques.resize(un, Eigen::VectorXd(m.nDof()));
+    mc.q = data.q[dcd];
+    mc.dqs = data.dqs[dcd];
 
     for (cdm::Index i = 0; i < m.nLinks(); ++i) {
         cdm::Index p = m.jointPosInParam(i);
@@ -112,7 +119,7 @@ void Init(const TrajectoryData& data, const cdm::Model& m, cdm::ModelConfig<Orde
             dA = expSE3(m.joint(i).S() * mc.q.segment(p, m.joint(i).dof()));
         }
 
-        auto& jm = mc.jointMotions[i];
+        auto& jm = mc.jointMotions[static_cast<size_t>(i)];
         jm.transform() = m.T0(i) * dA;
         for (cdm::Index n = 0; n < data.order; ++n) {
             jm.motion()[n] = m.joint(i).S() * mc.dqs.col(n).segment(m.jointPosInDof(i), m.joint(i).dof());

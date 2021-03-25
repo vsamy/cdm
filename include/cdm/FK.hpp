@@ -13,13 +13,14 @@ namespace cdm {
 template <int Order>
 void FK(const Model& m, ModelConfig<Order>& mc)
 {
-    const auto& parents = m.jointParents();
     // TODO: Bench with inverse
     for (Index i = 0; i < m.nLinks(); ++i) {
-        if (parents[i] != -1) {
-            mc.bodyMotions[i] = mc.bodyMotions[parents[i]] * mc.jointMotions[i];
+        size_t ui = static_cast<size_t>(i);
+        Index parent = m.jointParent(i);
+        if (parent != -1) {
+            mc.bodyMotions[ui] = mc.bodyMotions[static_cast<size_t>(parent)] * mc.jointMotions[ui];
         } else {
-            mc.bodyMotions[i] = mc.world * mc.jointMotions[i];
+            mc.bodyMotions[ui] = mc.world * mc.jointMotions[ui];
         }
     }
 }

@@ -48,20 +48,22 @@ TEST_CASE_TEMPLATE("FK", T, FixedOrder, DynamicOrder)
 
     // Check joint motion first
     for (cdm::Index i = 0; i < mb.nrJoints(); ++i) {
-        REQUIRE(mbc.parentToSon[i].translation().isApprox(mc1.jointMotions[i].transform().translation()));
-        REQUIRE(mbc.parentToSon[i].rotation().transpose().isApprox(mc1.jointMotions[i].transform().rotation()));
-        REQUIRE(mbc.jointVelocity[i].vector() == mc1.jointMotions[i].motion()[0].vector());
+        size_t ui = static_cast<size_t>(i);
+        REQUIRE(mbc.parentToSon[ui].translation().isApprox(mc1.jointMotions[ui].transform().translation()));
+        REQUIRE(mbc.parentToSon[ui].rotation().transpose().isApprox(mc1.jointMotions[ui].transform().rotation()));
+        REQUIRE(mbc.jointVelocity[ui].vector() == mc1.jointMotions[ui].motion()[0].vector());
     }
 
     // Check FK with RBDyn
     auto linkWorldInv = mc1.world.inverse();
     double prec = coma::dummy_precision<double>();
     for (cdm::Index i = 0; i < mb.nrJoints(); ++i) {
-        auto linkMotions = (linkWorldInv * mc1.bodyMotions[i]).motion();
-        REQUIRE((mbc.bodyPosW[i].translation() - mc1.bodyMotions[i].transform().translation()).norm() < prec);
-        REQUIRE((mbc.bodyPosW[i].rotation().transpose() - mc1.bodyMotions[i].transform().rotation()).norm() < prec);
-        REQUIRE((mbc.bodyVelB[i].vector() - linkMotions[0].vector()).norm() < prec);
-        REQUIRE((mbc.bodyAccB[i].vector() - linkMotions[1].vector()).norm() < prec);
+        size_t ui = static_cast<size_t>(i);
+        auto linkMotions = (linkWorldInv * mc1.bodyMotions[ui]).motion();
+        REQUIRE((mbc.bodyPosW[ui].translation() - mc1.bodyMotions[ui].transform().translation()).norm() < prec);
+        REQUIRE((mbc.bodyPosW[ui].rotation().transpose() - mc1.bodyMotions[ui].transform().rotation()).norm() < prec);
+        REQUIRE((mbc.bodyVelB[ui].vector() - linkMotions[0].vector()).norm() < prec);
+        REQUIRE((mbc.bodyAccB[ui].vector() - linkMotions[1].vector()).norm() < prec);
     }
 
     // Second FK
@@ -71,8 +73,9 @@ TEST_CASE_TEMPLATE("FK", T, FixedOrder, DynamicOrder)
 
     // Numerical check
     for (cdm::Index i = 0; i < mb.nrBodies(); ++i) {
-        auto m1 = (linkWorldInv * mc1.bodyMotions[i]).motion();
-        auto m2 = (linkWorldInv * mc2.bodyMotions[i]).motion();
+        size_t ui = static_cast<size_t>(i);
+        auto m1 = (linkWorldInv * mc1.bodyMotions[ui]).motion();
+        auto m2 = (linkWorldInv * mc2.bodyMotions[ui]).motion();
         auto dV = (m2 - m1) / dt;
         for (cdm::Index n = 0; n < order - 1; ++n) {
             REQUIRE((dV[n] - m2[n + 1]).vector().norm() < dt * 1000.);

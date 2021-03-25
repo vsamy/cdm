@@ -128,15 +128,16 @@ TEST_CASE("model")
     // checks
     REQUIRE(model.nLinks() == 5);
     for (int i = 0; i < model.nLinks(); ++i) {
-        REQUIRE(model.joint(i) == js[i]);
-        REQUIRE(model.body(i) == bs[i]);
+        size_t ui = static_cast<size_t>(i);
+        REQUIRE(model.joint(i) == js[ui]);
+        REQUIRE(model.body(i) == bs[ui]);
         if (i != 0) {
-            REQUIRE(model.T0(i) == T0[i - 1]);
+            REQUIRE(model.T0(i) == T0[ui - 1]);
         } else {
             REQUIRE(model.T0(i) == TRoot);
         }
-        REQUIRE(model.jointParent(i) == jointParents[i]);
-        REQUIRE(model.jointChild(i) == jointChildren[i]);
+        REQUIRE(model.jointParent(i) == jointParents[ui]);
+        REQUIRE(model.jointChild(i) == jointChildren[ui]);
     }
 
     REQUIRE_THROWS_AS(model.jointParentAt(7), std::out_of_range);
