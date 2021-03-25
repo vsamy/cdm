@@ -16,7 +16,7 @@ Eigen::MatrixXd BasicJacobian(const Model& m, const ModelConfig<Order>& mc, cons
     Index j = m.bodyIndexByName(bodyName);
     auto C_b_0 = mc.bodyMotions[j].inverse();
     while (j != -1) {
-        J.block(0, Order * posInDof[j], 6 * Order, m.joint(j).dof()) = (C_b_0 * mc.bodyMotions[j]).matrix() * makeDiag<Order>(m.joint(j).S().matrix());
+        J.block(0, Order * posInDof[j], 6 * Order, m.joint(j).dof()) = (C_b_0 * mc.bodyMotions[j]).template matrix<Order>() * makeDiag<Order>(m.joint(j).S().matrix());
         j = parents[j];
     }
 

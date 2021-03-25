@@ -2,6 +2,12 @@
 #include "doctest/doctest.h"
 #include "macros.hpp"
 #include "model_generation.hpp"
+#include <RBDyn/FA.h>
+#include <RBDyn/FD.h>
+#include <RBDyn/FK.h>
+#include <RBDyn/FV.h>
+#include <RBDyn/ID.h>
+#include <RBDyn/Jacobian.h>
 #include <cdm/BasicJacobian.hpp>
 #include <cdm/FK.hpp>
 #include <cdm/ID.hpp>
@@ -9,12 +15,6 @@
 #include <cdm/JointMomentumJacobian.hpp>
 #include <cdm/LinkForceJacobian.hpp>
 #include <cdm/LinkMomentumJacobian.hpp>
-#include <RBDyn/FA.h>
-#include <RBDyn/FD.h>
-#include <RBDyn/FK.h>
-#include <RBDyn/FV.h>
-#include <RBDyn/ID.h>
-#include <RBDyn/Jacobian.h>
 #include <tuple>
 
 struct FixedOrder {
@@ -36,7 +36,7 @@ TEST_CASE_TEMPLATE("BasicJacobians", T, FixedOrder) // TODO: , DynamicOrder)
 
     cdm::Model model = cdm::makeHumanBody();
     cdm::ModelConfig<order> mc;
-    std::string bodyName{ "RARM_1" };
+    std::string bodyName{ "RARM1" };
 
     int nt = 21;
     double dt = 1e-8;
@@ -104,7 +104,7 @@ TEST_CASE_TEMPLATE("LinkMomentumJacobian", T, FixedOrder) // TODO: , DynamicOrde
 
     cdm::Model model = cdm::makeHumanBody();
     cdm::ModelConfig<order> mc, mcNoG;
-    std::string bodyName{ "RARM_1" };
+    std::string bodyName{ "RARM1" };
 
     int nt = 21;
     double dt = 1e-8;
@@ -150,7 +150,7 @@ TEST_CASE_TEMPLATE("LinkForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
 
     cdm::Model model = cdm::makeHumanBody();
     cdm::ModelConfig<order> mc, mcNoG;
-    std::string bodyName{ "RARM_1" };
+    std::string bodyName{ "RARM1" };
 
     int nt = 21;
     double dt = 1e-8;
@@ -201,7 +201,7 @@ TEST_CASE_TEMPLATE("LinkForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
 
     cdm::Model model = cdm::makeHumanBody();
     cdm::ModelConfig<order> mc, mcNoG;
-    std::string bodyName{ "RARM_1" };
+    std::string bodyName{ "RARM1" };
 
     int nt = 21;
     double dt = 1e-8;
@@ -253,7 +253,7 @@ TEST_CASE_TEMPLATE("JointForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
 
     cdm::Model model = cdm::makeHumanBody();
     cdm::ModelConfig<order> mc, mcNoG;
-    std::string bodyName{ "RARM_1" };
+    std::string bodyName{ "RARM1" };
 
     int nt = 21;
     double dt = 1e-8;

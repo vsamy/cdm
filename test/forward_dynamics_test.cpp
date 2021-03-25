@@ -125,7 +125,9 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
     for (Index i = 0; i < model.nLinks(); ++i) {
         Index dof = model.joint(i).dof();
         for (int n = 0; n < order; ++n) {
-            REQUIRE(dqs.col(n).segment(model.jointPosInDof(i), dof).isApprox(y[i].segment(n * dof, dof) * factors[n]));
+            Eigen::VectorXd mot = dqs.col(n).segment(model.jointPosInDof(i), dof);
+            Eigen::VectorXd yMot = y[i].segment(n * dof, dof) * factors[n];
+            REQUIRE(mot.isApprox(yMot));
         }
     }
 }
