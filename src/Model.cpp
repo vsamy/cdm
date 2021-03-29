@@ -12,8 +12,8 @@ Model::Model(std::vector<Joint> joints, std::vector<Body> bodies, std::vector<In
     , m_jointParents(std::move(jointParents))
     , m_jointChilds(std::move(jointChilds))
     , m_T0(std::move(T0))
-    , m_jointPosInParam(joints.size())
-    , m_jointPosInDof(joints.size())
+    , m_jointPosInParam(static_cast<size_t>(m_nLinks))
+    , m_jointPosInDof(static_cast<size_t>(m_nLinks))
 {
     for (Index i = 0; i < m_nLinks; ++i) {
         size_t ui = static_cast<size_t>(i);

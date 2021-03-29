@@ -1,6 +1,5 @@
 #pragma once
 
-#include "forward_declare.hpp"
 #include <coma/Core>
 
 namespace cdm {
@@ -27,9 +26,7 @@ template <int NVec>
 using DiInertia = coma::DiInertia<double, NVec>;
 template <int NVec>
 using DiMotionSubspace = coma::DiMotionSubspace<double, NVec>;
-template <int NVec>
-using DBX = coma::DBX<double, NVec>;
-
-using LB66 = LowerBlockTriangularMatrix<Eigen::Matrix6d>;
+// template <int NVec>
+// using DBX = coma::DBX<double, NVec>;
 
 } // namespace cdm
