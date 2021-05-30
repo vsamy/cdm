@@ -1,0 +1,5 @@
+{
+    "cmake.configureArgs": [
+        "-DBUILD_V0=ON"
+    ]
+}

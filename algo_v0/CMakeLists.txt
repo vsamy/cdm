@@ -1,0 +1,10 @@
+find_package(RBDyn REQUIRED)
+find_package(benchmark REQUIRED)
+
+add_executable(algo main.cpp)
+target_link_libraries(algo PUBLIC Eigen3::Eigen SpaceVecAlg::SpaceVecAlg RBDyn::RBDyn benchmark::benchmark)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(algo PUBLIC /wd4251 /bigobj)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(algo PUBLIC -fpermissive)
+endif()

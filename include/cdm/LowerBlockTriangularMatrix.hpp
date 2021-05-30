@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020-2021 CNRS-UM LIRMM, CNRS-AIST JRL
+ */
+
 #pragma once
 
 #include "cdm/typedefs.hpp"
