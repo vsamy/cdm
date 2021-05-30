@@ -70,23 +70,23 @@ Here are comparison of CDM with different methods for different orders.
 
 order | RBDyn | dv_p(t) | ddv_p(t) | AD
 ------|-------|---------|----------|---
-velocity | 5.18703e^{-16} | / | / | 2.28878e^{-16}
-accel... | 1.75542e^{-15} | 1.08502e^{-7} | / | 88578e^{-16}
-jerk | / | 2.83273e^{-7} | 15.6074 | 1.50195e^{-15}
-snap | / | 5.10762e^{-7} | 54.8067 | 2.27058e^{-15}
-crackle | / | 8.10141e^{-7} | 150.261 | / 
+velocity | 5.18703e-16 | / | / | 2.28878e-16
+accel... | 1.75542e-15 | 1.08502e-7 | / | 88578e-16
+jerk | / | 2.83273e-7 | 15.6074 | 1.50195e-15
+snap | / | 5.10762e-7 | 54.8067 | 2.27058e-15
+crackle | / | 8.10141e-7 | 150.261 | / 
 
 Next table is a comparison between CDM and different methods for the ID
 
 order | RBDyn | dv_p(t)
 ------|-------|--------
-0 (momentum) | 5.62864e^{-16} | /
-0 (torque) | 4.33414e^{-15} | /
-1 | / | 1.04706e^{-6}
-2 | / | 1.2258e^{-6}
-3 | / | 2.0509e^{-6}
+0 (momentum) | 5.62864e-16 | /
+0 (torque) | 4.33414e-15 | /
+1 | / | 1.04706e-6
+2 | / | 1.2258e-6
+3 | / | 2.0509e-6
 
-Finally, the next table represents the errors of Jacobian computation where `A` stands fot eh `aleph` (the comprehensive motion) and `J`, `K`, `N`, `B`, `Q` and `R` are respectively the link Jacobian, the link momentum Jacobian, the link force Jacobian, the joint momentum Jacobian, the joint force Jacobian and the joint torque Jacobian.
+Finally, the next table represents the max error of Jacobian (*1e-16) computation where `A` stands fot eh `aleph` (the comprehensive motion) and `J`, `K`, `N`, `B`, `Q` and `R` are respectively the link Jacobian, the link momentum Jacobian, the link force Jacobian, the joint momentum Jacobian, the joint force Jacobian and the joint torque Jacobian.
 
 order | JA | KA | NA | BA | QA/RA
 ------|----|----|----|----|------
