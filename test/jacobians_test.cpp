@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020-2021 CNRS-UM LIRMM, CNRS-AIST JRL
+ */
+
 #include "SimpleHumanModel.hpp"
 #include "doctest/doctest.h"
 #include "macros.hpp"
@@ -81,7 +85,7 @@ TEST_CASE_TEMPLATE("BasicJacobians", T, FixedOrder) // TODO: , DynamicOrder)
     REQUIRE(rbdJDot.isApprox(cdm::BasicJacobianOfOrder<1>(model, mc, bodyName)));
 
     // Get \aleph
-    Eigen::VectorXd aleph = mc.getAleph();
+    Eigen::VectorXd aleph = mc.getAleph(model);
     // Get dx
     Eigen::VectorXd dx_j = BigJ * aleph;
 
@@ -126,7 +130,7 @@ TEST_CASE_TEMPLATE("LinkMomentumJacobian", T, FixedOrder) // TODO: , DynamicOrde
     Eigen::MatrixXd BigK = cdm::LinkMomentumJacobian(model, mc, bodyName); // p = BigK * \aleph
 
     // Get \aleph
-    Eigen::VectorXd aleph = mc.getAleph();
+    Eigen::VectorXd aleph = mc.getAleph(model);
     // Get p
     Eigen::VectorXd h_j = BigK * aleph;
 
@@ -173,7 +177,7 @@ TEST_CASE_TEMPLATE("LinkForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
     Eigen::MatrixXd BigN = LinkForceJacobian(model, mc, bodyName); // f = BigN * \aleph
 
     // Get \aleph
-    Eigen::VectorXd aleph = mc.getAleph();
+    Eigen::VectorXd aleph = mc.getAleph(model);
     // Get p
     Eigen::VectorXd f_j = BigN * aleph;
 
@@ -227,7 +231,7 @@ TEST_CASE_TEMPLATE("LinkForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
     Eigen::MatrixXd BigB = JointMomentumJacobian(model, mc, bodyName); // p = BigB * \aleph
 
     // Get \aleph
-    Eigen::VectorXd aleph = mc.getAleph();
+    Eigen::VectorXd aleph = mc.getAleph(model);
     // Get p
     Eigen::VectorXd h_j = BigB * aleph;
 
@@ -282,7 +286,7 @@ TEST_CASE_TEMPLATE("JointForceJacobian", T, FixedOrder) // TODO: , DynamicOrder)
     Eigen::MatrixXd BigQ = JointForceJacobian(model, mc, bodyName); // f = BigQ * \aleph
 
     // Get \aleph
-    Eigen::VectorXd aleph = mc.getAleph();
+    Eigen::VectorXd aleph = mc.getAleph(model);
     // Get p
     Eigen::VectorXd f_j = BigQ * aleph;
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020-2021 CNRS-UM LIRMM, CNRS-AIST JRL
+ */
+
 #include "SimpleHumanModel.hpp"
 #include "doctest/doctest.h"
 #include "macros.hpp"

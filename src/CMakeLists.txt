@@ -7,25 +7,25 @@ set(SRC
 )
 
 set(HEADERS 
-    ${PROJECT_NAME}/Core
-    ${PROJECT_NAME}/API.hpp
-    ${PROJECT_NAME}/BasicJacobian.hpp
-    ${PROJECT_NAME}/Body.hpp
+    # ../include/${PROJECT_NAME}/Core
+    ../include/${PROJECT_NAME}/API.hpp
+    ../include/${PROJECT_NAME}/BasicJacobian.hpp
+    ../include/${PROJECT_NAME}/Body.hpp
     # ${PROJECT_NAME}/coma_extensions.hpp
-    ${PROJECT_NAME}/FD.hpp
-    ${PROJECT_NAME}/FK.hpp
-    ${PROJECT_NAME}/ID.hpp
-    ${PROJECT_NAME}/Joint.hpp
-    ${PROJECT_NAME}/JointForceJacobian.hpp
-    ${PROJECT_NAME}/JointMomentumJacobian.hpp
-    ${PROJECT_NAME}/LinkForceJacobian.hpp
-    ${PROJECT_NAME}/LinkMomentumJacobian.hpp
+    ../include/${PROJECT_NAME}/FD.hpp
+    ../include/${PROJECT_NAME}/FK.hpp
+    ../include/${PROJECT_NAME}/ID.hpp
+    ../include/${PROJECT_NAME}/Joint.hpp
+    ../include/${PROJECT_NAME}/JointForceJacobian.hpp
+    ../include/${PROJECT_NAME}/JointMomentumJacobian.hpp
+    ../include/${PROJECT_NAME}/LinkForceJacobian.hpp
+    ../include/${PROJECT_NAME}/LinkMomentumJacobian.hpp
     # ${PROJECT_NAME}/LowerBlockTriangularMatrix.hpp
-    ${PROJECT_NAME}/math_utility.hpp
-    ${PROJECT_NAME}/Model.hpp
-    ${PROJECT_NAME}/ModelConfig.hpp
-    ${PROJECT_NAME}/ModelConstructor.hpp
-    ${PROJECT_NAME}/typedefs.hpp
+    ../include/${PROJECT_NAME}/math_utility.hpp
+    ../include/${PROJECT_NAME}/Model.hpp
+    ../include/${PROJECT_NAME}/ModelConfig.hpp
+    ../include/${PROJECT_NAME}/ModelConstructor.hpp
+    ../include/${PROJECT_NAME}/typedefs.hpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SRC})
