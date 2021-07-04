@@ -35,7 +35,7 @@ struct ModelConfig {
 template <int Order>
 ModelConfig<Order>::ModelConfig(const Model& m, Index order)
     : q(m.nParam())
-    , dqs(m.nDof(), order * m.nLinks())
+    , dqs(m.nDof(), order)
     , jointMotions(static_cast<size_t>(m.nLinks()))
     , bodyMotions(static_cast<size_t>(m.nLinks()))
     , jointMomentums(static_cast<size_t>(m.nLinks()))
@@ -70,29 +70,20 @@ void ModelConfig<Order>::setZero(const Model& m)
 template <int Order>
 Eigen::VectorXd ModelConfig<Order>::getAleph(const Model& m) const
 {
-    // auto order = dqs.cols();
-    // const auto& factors = coma::factorial_factors<double, Order>; // TODO: Use inverse_factorial_factors instead
-    // Eigen::VectorXd f(order);
-    // for (auto i = 0; i < order; ++i) {
-    //     f(i) = 1. / factors[static_cast<size_t>(i)];
-    // }
-
-    // Eigen::MatrixXd alephMat = (dqs * f.asDiagonal()).transpose();
-    // return Eigen::Map<Eigen::VectorXd>(alephMat.data(), alephMat.size());
     auto order = dqs.cols();
     const auto& jointPosInDof = m.jointPosInDof();
-        const auto& factors = coma::factorial_factors<double, Order>;
-        Eigen::VectorXd v(order * m.nDof());
-        Index curOrderPos = 0;
-        for (Index i = 0; i < m.nLinks(); ++i) {
-            Index dof = m.joint(i).dof();
-            for (Index k = 0; k < order; ++k) {
-                v.segment(curOrderPos + k * dof, dof) = dqs.col(k).segment(jointPosInDof[i], dof) / factors[static_cast<size_t>(k)];
-            }
-            curOrderPos += order * dof;
+    const auto& factors = coma::factorial_factors<double, Order>;
+    Eigen::VectorXd v(order * m.nDof());
+    Index curOrderPos = 0;
+    for (Index i = 0; i < m.nLinks(); ++i) {
+        Index dof = m.joint(i).dof();
+        for (Index k = 0; k < order; ++k) {
+            v.segment(curOrderPos + k * dof, dof) = dqs.col(k).segment(jointPosInDof[static_cast<size_t>(i)], dof) / factors[static_cast<size_t>(k)];
         }
+        curOrderPos += order * dof;
+    }
 
-        return v;
+    return v;
 }
 
 } // namespace cdm
