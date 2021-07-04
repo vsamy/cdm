@@ -134,7 +134,11 @@ TEST_CASE_TEMPLATE("FD", T, FixedOrder) //, DynamicOrder)
         for (int n = 0; n < order; ++n) {
             Eigen::VectorXd mot = dqs.col(n).segment(model.jointPosInDof(i), dof);
             Eigen::VectorXd yMot = y[static_cast<size_t>(i)].segment(n * dof, dof) * factors[static_cast<size_t>(n)];
-            REQUIRE(mot.isApprox(yMot));
+            REQUIRE(mot.size() == yMot.size());
+            for (Index k = 0; k < mot.size(); ++k) {
+                REQUIRE(std::abs(mot(k) - yMot(k)) < coma::dummy_precision<double>());
+            }
+            // REQUIRE(mot.isApprox(yMot)); // isApprox does not output good rsults for some reasons
         }
     }
 }
