@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(PROJECT_NAME cdm)
 set(PROJECT_DESCRIPTION "JRL cdm (Comprehensive Dynamics Model) based on coma library")
 set(PROJECT_URL "https://github.com/vsamy/cdm")
-set(PROJECT_VERSION 0.2.0)
+set(PROJECT_VERSION 0.3.0)
 set(DOXYGEN_USE_MATHJAX "YES")
 
 include(cmake/base.cmake)
@@ -26,12 +26,9 @@ endif()
 # External dependencies
 add_project_dependency(coma REQUIRED)
 
-# set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-# set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-
 if(NOT ${BUILD_V0})
     set(PROJECT_USE_CMAKE_EXPORT TRUE)
-    if(${PROJECT_VERSION} VERSION_LESS "1.0.0")
+    if(${PROJECT_VERSION} VERSION_LESS "0.3.0")
         message(WARNING "Current version is still a WIP state and is not yet usable. You can build working algorithm in the algo_v0 folder and build it by passing -DBUILD_V0=ON to cmake.")
     endif()
     add_subdirectory(src)

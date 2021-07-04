@@ -4,7 +4,6 @@
 
 #pragma once
 
-// #include <cdm/Core>
 #include <cdm/ModelConstructor.hpp>
 
 // includes

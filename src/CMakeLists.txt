@@ -7,11 +7,9 @@ set(SRC
 )
 
 set(HEADERS 
-    # ../include/${PROJECT_NAME}/Core
     ../include/${PROJECT_NAME}/API.hpp
     ../include/${PROJECT_NAME}/BasicJacobian.hpp
     ../include/${PROJECT_NAME}/Body.hpp
-    # ${PROJECT_NAME}/coma_extensions.hpp
     ../include/${PROJECT_NAME}/FD.hpp
     ../include/${PROJECT_NAME}/FK.hpp
     ../include/${PROJECT_NAME}/ID.hpp

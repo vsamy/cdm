@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "cdm/LowerBlockTriangularMatrix.hpp"
 #include "cdm/Model.hpp"
 #include "cdm/ModelConfig.hpp"
 #include "cdm/math_utility.hpp"
