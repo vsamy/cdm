@@ -5,11 +5,12 @@ The comprehensive Dynamics motion (CDM) is a library built on top of COMA librar
 ## Table of contents
  1. [Installation](#Installation)
  2. [Results](#Results)
+ 3. [Reference](#Reference)
 
 ## Installation
 
-The V1 is still in WIP and not all algorithms are working properly.
-The V0 is an executable that has working algorithms, tests and benchmarks.
+The V1 is still in WIP.
+The V0 is an executable used for RSS2021 that has working algorithms, tests and benchmarks.
 
 ### Dependencies
 
@@ -95,3 +96,7 @@ order | JA | KA | NA | BA | QA/RA
 3 | 87.0878 | 87.6064 | 76.7999 | 148.885 | 120.504
 4 | 193.816 | 209.061 | 163.068 | 842.994 | 944.174
 5 | 766.013 | 547.351 | 887.600 | 2277.34 | 3241.04
+
+## Reference
+
+Related paper is freely accessible [here](https://roboticsconference.org/program/papers/032/)
